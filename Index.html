@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS Kasir & Pesan Online — Arinna Cafe & Resto Sumenep</title>
+  <!-- Google Fonts: Plus Jakarta Sans & Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            arinna: {
+              bg: '#0B0914',
+              surface: '#141124',
+              card: '#1C1833',
+              border: '#2D274D',
+              purple: '#6C5CE7',
+              purpleDark: '#5546C9',
+              gold: '#D4AF37',
+              goldLight: '#F3D266',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0B0914;
+      color: #F8FAFC;
+      overflow-x: hidden;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0914;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2D274D;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6C5CE7;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up {
+      animation: fadeUp 0.28s ease-out forwards;
+    }
+
+    /* Thermal 80mm Receipt Print Styling */
+    @media print {
+      @page {
+        margin: 0;
+        size: auto;
+      }
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      body * {
+        visibility: hidden !important;
+      }
+      #receiptModal {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        inset: auto !important;
+      }
+      #receiptModal > div {
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+      #receiptPrintArea, #receiptPrintArea * {
+        visibility: visible !important;
+      }
+      #receiptPrintArea {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 10px 12px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 11px !important;
+        line-height: 1.38 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-arinna-gold selection:text-arinna-bg">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0 no-print"></div>
+
+  <!-- ===================================================================== -->
+  <!-- 1. HALAMAN GERBANG LOGIN MULTI-ROLE (PELANGGAN & KASIR / ADMIN)       -->
+  <!-- ===================================================================== -->
+  <section id="authGateView" class="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+    <!-- Decorative Radial Glows -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-arinna-purple/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-arinna-gold/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 bg-arinna-surface/95 backdrop-blur-xl border border-arinna-border rounded-3xl shadow-2xl overflow-hidden animate-fade-up relative z-10">
+      <!-- Brand Showcase Left Panel -->
+      <div class="lg:col-span-5 bg-gradient-to-br from-[#1B1535] via-[#130F26] to-[#0B0914] p-7 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-arinna-border">
+        <div class="space-y-5">
+          <!-- Custom SVG Logo Arinna -->
+          <div class="flex items-center gap-3.5">
+            <div class="w-14 h-14 rounded-2xl bg-arinna-bg border border-arinna-gold/60 flex items-center justify-center shadow-lg shadow-arinna-gold/10 shrink-0">
+              <svg viewBox="0 0 64 64" class="w-10 h-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="29" stroke="#D4AF37" stroke-width="2.2" />
+                <path d="M22 16L27 21L32 14L37 21L42 16L40 23H24L22 16Z" fill="#D4AF37" />
+                <path d="M32 25L44 50H38.8L36 43.5H28L25.2 50H20L32 25ZM29.4 39.2H34.6L32 32.8L29.4 39.2Z" fill="#F3D266" />
+                <path d="M16 44C19 48 24 51 32 51C40 51 45 48 48 44" stroke="#6C5CE7" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div>
+              <span class="inline-block text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-arinna-gold/15 text-arinna-gold border border-arinna-gold/30 mb-1">Sumenep • Madura</span>
+              <h1 class="font-display font-extrabold text-xl text-white leading-tight">ARINNA <span class="text-arinna-gold">CAFE & RESTO</span></h1>
+            </div>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Sistem Terpadu <strong class="text-white">Point of Sale (POS) Kasir</strong> &amp; <strong class="text-arinna-gold">Self-Order Pelanggan</strong> dengan nomor antrian otomatis, manajemen dapur, dan cetak struk thermal 80mm.
+          </p>
+
+          <div class="space-y-2.5 pt-2">
+            <div class="flex items-start gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-arinna-gold mt-0.5"></i>
+              <span>Pesan online dengan nomor antrian otomatis (<strong class="text-white">A-001</strong>, dst.) &amp; pantau status antrian.</span>
+            </div>
+            <div class="flex items-start gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-arinna-gold mt-0.5"></i>
+              <span>Kasir POS cepat dengan kalkulasi kembalian, promo/pajak, dan cetak struk thermal 80mm.</span>
+            </div>
+            <div class="flex items-start gap-2.5 text-xs text-slate-300">
+              <i class="fa-solid fa-circle-check text-arinna-gold mt-0.5"></i>
+              <span>Sinkronisasi pesanan online &amp; nomor antrian secara real-time antar-tab browser.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Queue Status Box on Login -->
+        <div class="mt-7 pt-4 border-t border-arinna-border/80 flex items-center justify-between">
+          <div>
+            <span class="block text-[10px] uppercase tracking-wider text-slate-400">Antrian Sedang Dipanggil</span>
+            <span id="loginCurrentServingBadge" class="font-mono font-extrabold text-lg text-arinna-gold">A-000</span>
+          </div>
+          <span class="text-[11px] text-slate-400 text-right">Buka Setiap Hari<br/><strong class="text-slate-200">08.00 – 22.00 WIB</strong></span>
+        </div>
+      </div>
+
+      <!-- Right Role Switcher & Forms Panel -->
+      <div class="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-center space-y-5">
+        <!-- Role Switcher Tabs -->
+        <div class="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-arinna-bg border border-arinna-border">
+          <button type="button" id="roleTabCustomer" onclick="switchLoginRole('customer')" class="py-2.5 px-3 rounded-xl font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-arinna-gold text-arinna-bg shadow-lg">
+            <i class="fa-solid fa-user"></i>
+            <span>Pelanggan</span>
+          </button>
+          <button type="button" id="roleTabStaff" onclick="switchLoginRole('staff')" class="py-2.5 px-3 rounded-xl font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+            <i class="fa-solid fa-cash-register"></i>
+            <span>Kasir / Staff</span>
+          </button>
+        </div>
+
+        <!-- Form Login Pelanggan & Buat Akun -->
+        <div id="customerAuthContainer" class="space-y-4">
+          <div class="flex items-center justify-between bg-arinna-bg border border-arinna-border rounded-xl p-1 text-xs">
+            <button type="button" id="custAuthModeLoginBtn" onclick="switchCustomerAuthMode('login')" class="flex-1 py-2 rounded-lg font-bold bg-arinna-card text-arinna-gold transition">
+              Masuk (Nama &amp; Sandi)
+            </button>
+            <button type="button" id="custAuthModeRegisterBtn" onclick="switchCustomerAuthMode('register')" class="flex-1 py-2 rounded-lg font-bold text-slate-400 hover:text-white transition">
+              Buat Akun Baru
+            </button>
+          </div>
+
+          <div id="custAuthErrorBox" class="hidden p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-start gap-2.5" role="alert">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400 mt-0.5 shrink-0"></i>
+            <span id="custAuthErrorMsg" class="flex-1 font-semibold"></span>
+          </div>
+
+          <div id="custAuthSuccessBox" class="hidden p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs flex items-start gap-2.5" role="status">
+            <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 shrink-0"></i>
+            <span id="custAuthSuccessMsg" class="flex-1 font-semibold"></span>
+          </div>
+
+          <!-- Form Login Pelanggan -->
+          <form id="customerLoginForm" onsubmit="handleCustomerLogin(event)" novalidate class="space-y-3.5">
+            <div>
+              <label for="custLoginName" class="block text-xs font-semibold text-slate-300 mb-1.5">Nama Akun Pelanggan <span class="text-rose-400">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input type="text" id="custLoginName" autocomplete="username" oninput="clearCustomerAuthFeedback()" placeholder="Masukkan nama akun Anda" class="w-full pl-9 pr-4 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-sm text-white placeholder-slate-500" />
+              </div>
+            </div>
+
+            <div>
+              <label for="custLoginPass" class="block text-xs font-semibold text-slate-300 mb-1.5">Kata Sandi <span class="text-rose-400">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input type="password" id="custLoginPass" autocomplete="current-password" oninput="clearCustomerAuthFeedback()" placeholder="Masukkan kata sandi Anda" class="w-full pl-9 pr-11 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-sm text-white placeholder-slate-500" />
+                <button type="button" onclick="togglePasswordField('custLoginPass', 'toggleCustLoginPassIcon')" aria-label="Tampilkan atau sembunyikan kata sandi" class="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-arinna-card flex items-center justify-center transition">
+                  <i id="toggleCustLoginPassIcon" class="fa-solid fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="pt-1 space-y-2.5">
+              <button type="submit" id="custLoginSubmitBtn" class="w-full py-3.5 px-4 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-display font-extrabold text-sm transition shadow-lg shadow-arinna-gold/20 flex items-center justify-center gap-2">
+                <span>Masuk &amp; Mulai Pesan Menu</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button type="button" onclick="switchCustomerAuthMode('register')" class="w-full py-2.5 px-4 rounded-xl bg-arinna-card hover:bg-arinna-border text-slate-200 border border-arinna-border font-semibold text-xs transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user-plus text-arinna-gold"></i> Belum punya akun? Buat Akun Baru
+              </button>
+            </div>
+          </form>
+
+          <!-- Form Buat Akun Pelanggan Baru -->
+          <form id="customerRegisterForm" onsubmit="handleCustomerRegister(event)" novalidate class="hidden space-y-3.5">
+            <div>
+              <label for="custRegName" class="block text-xs font-semibold text-slate-300 mb-1.5">Nama Lengkap <span class="text-rose-400">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input type="text" id="custRegName" autocomplete="name" oninput="clearCustomerAuthFeedback()" placeholder="Contoh: Rina Sari" class="w-full pl-9 pr-4 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-sm text-white placeholder-slate-500" />
+              </div>
+            </div>
+
+            <div>
+              <label for="custRegPhone" class="block text-xs font-semibold text-slate-300 mb-1.5">Nomor HP / WhatsApp <span class="text-rose-400">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input type="tel" id="custRegPhone" autocomplete="tel" oninput="clearCustomerAuthFeedback()" placeholder="Contoh: 081234567890" class="w-full pl-9 pr-4 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-sm text-white placeholder-slate-500" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="custRegPass" class="block text-xs font-semibold text-slate-300 mb-1.5">Kata Sandi <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                  <input type="password" id="custRegPass" autocomplete="new-password" oninput="clearCustomerAuthFeedback()" placeholder="Min. 4 karakter" class="w-full pl-9 pr-10 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-sm text-white placeholder-slate-500" />
+                  <button type="button" onclick="togglePasswordField('custRegPass', 'toggleCustRegPassIcon')" aria-label="Tampilkan atau sembunyikan kata sandi" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-arinna-card flex items-center justify-center transition">
+                    <i id="toggleCustRegPassIcon" class="fa-solid fa-eye text-xs"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label for="custRegPassConfirm" class="block text-xs font-semibold text-slate-300 mb-1.5">Konfirmasi Sandi <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <i class="fa-solid fa-shield-check absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                  <input type="password" id="custRegPassConfirm" autocomplete="new-password" oninput="clearCustomerAuthFeedback()" placeholder="Ulangi kata sandi" class="w-full pl-9 pr-10 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-sm text-white placeholder-slate-500" />
+                  <button type="button" onclick="togglePasswordField('custRegPassConfirm', 'toggleCustRegConfirmIcon')" aria-label="Tampilkan atau sembunyikan konfirmasi kata sandi" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-arinna-card flex items-center justify-center transition">
+                    <i id="toggleCustRegConfirmIcon" class="fa-solid fa-eye text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-1 space-y-2.5">
+              <button type="submit" id="custRegisterSubmitBtn" class="w-full py-3.5 px-4 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-display font-extrabold text-sm transition shadow-lg shadow-arinna-gold/20 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user-check"></i>
+                <span>Buat Akun &amp; Masuk Sekarang</span>
+              </button>
+              <button type="button" onclick="switchCustomerAuthMode('login')" class="w-full py-2.5 px-4 rounded-xl bg-arinna-card hover:bg-arinna-border text-slate-200 border border-arinna-border font-semibold text-xs transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-left text-arinna-gold"></i> Sudah punya akun? Masuk dengan Nama &amp; Sandi
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Form Login Kasir / Admin -->
+        <form id="staffLoginForm" onsubmit="handleStaffLogin(event)" novalidate class="hidden space-y-4">
+          <div id="staffLoginErrorBox" class="hidden p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-start gap-2.5" role="alert">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400 mt-0.5 shrink-0"></i>
+            <div class="flex-1">
+              <div id="staffLoginErrorMsg" class="font-semibold">Username atau sandi tidak valid.</div>
+              <div id="staffLoginAttemptMeta" class="text-[11px] text-rose-300/80 mt-0.5 hidden"></div>
+            </div>
+          </div>
+
+          <div>
+            <label for="staffLoginUser" class="block text-xs font-semibold text-slate-300 mb-1.5">Username / ID Kasir <span class="text-rose-400">*</span></label>
+            <div class="relative">
+              <i class="fa-solid fa-id-badge absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="text" id="staffLoginUser" autocomplete="username" oninput="clearStaffLoginError()" placeholder="Masukkan username kasir" class="w-full pl-9 pr-4 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-purple focus:outline-none text-sm text-white placeholder-slate-500" />
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="staffLoginPass" class="block text-xs font-semibold text-slate-300">Sandi / Password <span class="text-rose-400">*</span></label>
+              <span id="staffCapsLockWarning" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <i class="fa-solid fa-arrow-up-from-bracket mr-1"></i>CAPS LOCK AKTIF
+              </span>
+            </div>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="password" id="staffLoginPass" autocomplete="current-password" oninput="clearStaffLoginError()" onkeyup="checkStaffCapsLock(event)" onkeydown="checkStaffCapsLock(event)" placeholder="Masukkan sandi kasir..." class="w-full pl-9 pr-11 py-3 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-purple focus:outline-none text-sm text-white placeholder-slate-500" />
+              <button type="button" id="toggleStaffPasswordBtn" onclick="togglePasswordField('staffLoginPass', 'toggleStaffPasswordIcon')" aria-label="Tampilkan atau sembunyikan sandi" class="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-arinna-card flex items-center justify-center transition">
+                <i id="toggleStaffPasswordIcon" class="fa-solid fa-eye text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-arinna-purple hover:bg-arinna-purpleDark text-white font-display font-extrabold text-sm transition shadow-lg shadow-arinna-purple/25 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Masuk ke Dashboard Kasir</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- 2. MAIN APPLICATION SHELL (SETELAH LOGIN)                             -->
+  <!-- ===================================================================== -->
+  <div id="mainAppShell" class="hidden min-h-screen flex flex-col">
+    <!-- Top Sticky Header -->
+    <header class="sticky top-0 z-40 bg-arinna-surface/95 backdrop-blur-md border-b border-arinna-border no-print">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-arinna-bg border border-arinna-gold/60 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 64 64" class="w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="29" stroke="#D4AF37" stroke-width="2.4" />
+              <path d="M22 16L27 21L32 14L37 21L42 16L40 23H24L22 16Z" fill="#D4AF37" />
+              <path d="M32 25L44 50H38.8L36 43.5H28L25.2 50H20L32 25ZM29.4 39.2H34.6L32 32.8L29.4 39.2Z" fill="#F3D266" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-display font-extrabold text-sm sm:text-base text-white tracking-tight">ARINNA <span class="text-arinna-gold">CAFE &amp; RESTO</span></span>
+              <span id="headerRoleBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-arinna-purple/25 text-purple-200 border border-arinna-purple/40">KASIR</span>
+            </div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">Jl. DR. Cipto No.99, Sumenep • <span id="liveClockText" class="font-mono text-slate-300"></span></p>
+          </div>
+        </div>
+
+        <!-- Center / Right Status & User Controls -->
+        <div class="flex items-center gap-2.5 sm:gap-3 ml-auto">
+          <!-- Now Serving Queue Pill -->
+          <div class="px-3 py-1.5 rounded-xl bg-arinna-bg border border-arinna-gold/40 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div class="text-left">
+              <span class="block text-[9px] uppercase tracking-wider text-slate-400 leading-none">Antrian Dipanggil</span>
+              <span id="headerNowServing" class="font-mono font-extrabold text-xs sm:text-sm text-arinna-gold">A-000</span>
+            </div>
+          </div>
+
+          <!-- Active Profile Info -->
+          <div class="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-arinna-card border border-arinna-border">
+            <div class="w-7 h-7 rounded-lg bg-arinna-purple/30 text-arinna-gold flex items-center justify-center text-xs font-bold">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="text-left">
+              <div id="headerUserName" class="text-xs font-bold text-white leading-tight">Kasir</div>
+              <div id="headerUserSub" class="text-[10px] text-slate-400 leading-tight">Shift Aktif</div>
+            </div>
+          </div>
+
+          <!-- Logout Button -->
+          <button onclick="handleLogout()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold transition flex items-center gap-1.5" title="Keluar atau Ganti Akun">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span class="hidden sm:inline">Keluar</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- A. WORKSPACE PELANGGAN (PESAN ONLINE & PANTAU ANTRIAN)              -->
+    <!-- =================================================================== -->
+    <main id="customerWorkspace" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+      <!-- Sub-Navigation Tabs Pelanggan -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-arinna-surface border border-arinna-border p-2 rounded-2xl">
+        <div class="flex items-center gap-2">
+          <button id="custTabOrderBtn" onclick="switchCustomerSubTab('order')" class="px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm bg-arinna-gold text-arinna-bg transition flex items-center gap-2">
+            <i class="fa-solid fa-bowl-food"></i> Katalog &amp; Pesan Online
+          </button>
+          <button id="custTabTicketsBtn" onclick="switchCustomerSubTab('tickets')" class="px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2">
+            <i class="fa-solid fa-ticket"></i> Pesanan &amp; Antrian Saya
+            <span id="custActiveOrderBadge" class="px-2 py-0.5 rounded-full text-[10px] bg-arinna-purple text-white font-mono">0</span>
+          </button>
+        </div>
+        <div class="text-xs text-slate-400 px-2">
+          Antrian Berikutnya: <strong id="custNextQueuePreview" class="font-mono text-arinna-gold">A-001</strong>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 1: KATALOG MENU & KERANJANG PELANGGAN -->
+      <div id="customerOrderSection" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Menu Catalog Column -->
+        <div class="lg:col-span-8 space-y-4">
+          <!-- Search & Category Filter -->
+          <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4 space-y-3">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="custSearchInput" oninput="renderCustomerMenu()" placeholder="Cari menu favorit Anda (misal: Iga Bakar, Kopi Susu, Bebek)..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-gold focus:outline-none text-xs sm:text-sm text-white placeholder-slate-500" />
+            </div>
+            <div id="custCategoryBar" class="flex items-center gap-2 overflow-x-auto pb-1"></div>
+          </div>
+
+          <!-- Grid Cards Menu -->
+          <div id="customerMenuGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Customer Cart & Checkout Panel -->
+        <div class="lg:col-span-4 bg-arinna-surface border border-arinna-border rounded-2xl p-4 sm:p-5 space-y-4 lg:sticky lg:top-20">
+          <div class="flex items-center justify-between border-b border-arinna-border pb-3">
+            <div>
+              <h3 class="font-display font-bold text-base text-white">Keranjang Pesanan</h3>
+              <p class="text-[11px] text-slate-400">Otomatis mendapat nomor antrian</p>
+            </div>
+            <button onclick="clearCustomerCart()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">Kosongkan</button>
+          </div>
+
+          <!-- Order Type & Table / Payment Selection -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Tipe Pesanan</label>
+              <select id="custOrderType" onchange="toggleCustTableField()" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-gold focus:outline-none">
+                <option value="Dine-In">Dine-In (Makan di Tempat)</option>
+                <option value="Takeaway">Takeaway (Bawa Pulang)</option>
+              </select>
+            </div>
+            <div id="custTableWrapper">
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Nomor Meja</label>
+              <input type="text" id="custTableNumber" value="Meja 05" placeholder="Meja 01" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-gold focus:outline-none" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Metode Pembayaran Digital <span class="text-rose-400">*</span></label>
+            <select id="custPaymentPreference" onchange="onCustomerDigitalMethodChange()" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-gold focus:outline-none">
+              <option value="">-- Pilih Metode Pembayaran Digital --</option>
+              <option value="QRIS Arinna">QRIS Arinna (Scan Semua E-Wallet &amp; M-Banking)</option>
+              <option value="Transfer Bank">Transfer Bank (BCA / Mandiri / BRI)</option>
+              <option value="E-Wallet">E-Wallet (GoPay / OVO / DANA)</option>
+            </select>
+          </div>
+
+          <!-- Panel Instruksi & Simulasi Konfirmasi Pembayaran Digital Pelanggan -->
+          <div id="custDigitalPaymentPanel" class="hidden bg-arinna-bg border border-arinna-gold/45 rounded-2xl p-3 space-y-2.5 text-xs">
+            <div class="flex items-center justify-between border-b border-arinna-border pb-2">
+              <span class="font-display font-bold text-arinna-gold flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-halved"></i> Instruksi Pembayaran Digital
+              </span>
+              <span id="custDigitalStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Menunggu Konfirmasi
+              </span>
+            </div>
+
+            <!-- Sub-channel Selector (Bank / E-Wallet / QRIS) -->
+            <div id="custDigitalSubchannelBox" class="hidden">
+              <label id="custDigitalSubchannelLabel" class="block text-[10px] font-semibold text-slate-400 mb-1">Pilih Penyedia</label>
+              <select id="custDigitalSubchannel" onchange="refreshCustomerDigitalInstruction()" class="w-full px-2.5 py-1.5 rounded-xl bg-arinna-surface border border-arinna-border text-xs text-white focus:border-arinna-gold focus:outline-none"></select>
+            </div>
+
+            <!-- QRIS Preview Visual bila memilih QRIS Arinna -->
+            <div id="custQrisVisualBox" class="hidden bg-white text-slate-900 rounded-xl p-2.5 text-center space-y-1">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-700">QRIS ARINNA CAFE &amp; RESTO SUMENEP</div>
+              <div class="w-24 h-24 mx-auto border-2 border-slate-900 rounded-lg p-1.5 grid grid-cols-5 grid-rows-5 gap-1 bg-white">
+                <span class="bg-slate-900 rounded-xs"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-slate-900 rounded-xs"></span>
+                <span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span>
+                <span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-arinna-gold rounded-xs"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span>
+                <span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span>
+                <span class="bg-slate-900 rounded-xs"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-white"></span><span class="bg-slate-900 rounded-xs"></span><span class="bg-slate-900 rounded-xs"></span>
+              </div>
+              <div id="custQrisNominalText" class="font-mono font-bold text-xs text-black">Nominal Tepat: Rp 0</div>
+            </div>
+
+            <!-- Kode Bayar / VA / Tujuan & ID Referensi -->
+            <div class="bg-arinna-surface border border-arinna-border rounded-xl p-2.5 space-y-1 text-[11px]">
+              <div class="flex justify-between gap-2">
+                <span id="custDigitalTargetLabel" class="text-slate-400">Tujuan / Kode Bayar:</span>
+                <span id="custDigitalTargetValue" class="font-mono font-bold text-white text-right">-</span>
+              </div>
+              <div class="flex justify-between gap-2">
+                <span class="text-slate-400">ID Referensi:</span>
+                <span id="custDigitalRefCode" class="font-mono font-bold text-arinna-gold text-right">-</span>
+              </div>
+              <div class="flex justify-between gap-2">
+                <span class="text-slate-400">Nominal Tagihan:</span>
+                <span id="custDigitalAmountText" class="font-mono font-bold text-emerald-400 text-right">Rp 0</span>
+              </div>
+            </div>
+
+            <label class="flex items-start gap-2 pt-0.5 cursor-pointer select-none">
+              <input type="checkbox" id="custDigitalPaidConfirm" onchange="syncCustomerDigitalConfirmBadge()" class="mt-0.5 rounded accent-arinna-gold" />
+              <span class="text-[11px] text-slate-200 leading-snug">
+                Saya sudah melakukan pembayaran digital sesuai nominal dan menyertakan referensi pembayaran.
+              </span>
+            </label>
+          </div>
+
+          <!-- Cart Items List -->
+          <div id="customerCartList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+
+          <!-- Summary & Submit -->
+          <div class="border-t border-arinna-border pt-3 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-400">
+              <span>Subtotal</span>
+              <span id="custCartSubtotal" class="font-mono text-white">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Pajak Resto (10%)</span>
+              <span id="custCartTax" class="font-mono text-white">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center pt-1.5 border-t border-arinna-border">
+              <span class="font-display font-bold text-sm text-white">Estimasi Total</span>
+              <span id="custCartTotal" class="font-display font-extrabold text-lg text-arinna-gold">Rp 0</span>
+            </div>
+
+            <button onclick="submitCustomerOrder()" class="w-full mt-2 py-3.5 px-4 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-display font-extrabold text-sm transition shadow-lg shadow-arinna-gold/20 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Kirim Pesanan &amp; Ambil Antrian</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: PESANAN & ANTRIAN PELANGGAN -->
+      <div id="customerTicketsSection" class="hidden space-y-4">
+        <!-- Live Queue Banner -->
+        <div class="bg-gradient-to-r from-[#1E183D] to-[#141124] border border-arinna-gold/40 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold uppercase tracking-widest text-arinna-gold">Layar Informasi Antrian Resto</span>
+            <h3 class="font-display font-extrabold text-lg sm:text-xl text-white">Nomor Antrian yang Sedang Dipanggil</h3>
+            <p class="text-xs text-slate-300">Silakan menuju meja kasir atau tunggu pelayan mengantar saat nomor Anda dipanggil.</p>
+          </div>
+          <div class="px-6 py-3 rounded-2xl bg-arinna-bg border-2 border-arinna-gold text-center">
+            <span class="block text-[10px] uppercase tracking-wider text-slate-400">Sedang Dilayani</span>
+            <span id="custBoardNowServing" class="font-mono font-extrabold text-3xl text-arinna-gold">A-000</span>
+          </div>
+        </div>
+
+        <!-- List of Customer Orders -->
+        <div id="customerTicketsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- B. WORKSPACE KASIR / ADMIN (POS, ONLINE ORDER, MENU, LAPORAN)       -->
+    <!-- =================================================================== -->
+    <main id="staffWorkspace" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+      <!-- Staff Navigation Tabs -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-arinna-surface border border-arinna-border p-2 rounded-2xl">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <button id="staffTabPosBtn" onclick="switchStaffTab('pos')" class="px-3.5 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm bg-arinna-purple text-white transition flex items-center gap-2">
+            <i class="fa-solid fa-cash-register"></i> Kasir POS
+          </button>
+          <button id="staffTabOnlineBtn" onclick="switchStaffTab('online')" class="px-3.5 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2">
+            <i class="fa-solid fa-bell-concierge"></i> Pesanan Online &amp; Dapur
+            <span id="staffOnlineBadge" class="px-2 py-0.5 rounded-full text-[10px] bg-arinna-gold text-arinna-bg font-mono font-extrabold">0</span>
+          </button>
+          <button id="staffTabMenuBtn" onclick="switchStaffTab('menu')" class="px-3.5 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2">
+            <i class="fa-solid fa-utensils"></i> Kelola Menu
+          </button>
+          <button id="staffTabReportBtn" onclick="switchStaffTab('report')" class="px-3.5 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2">
+            <i class="fa-solid fa-chart-line"></i> Laporan &amp; Struk
+          </button>
+        </div>
+
+        <!-- Call Next Queue Quick Control -->
+        <div class="flex items-center gap-2 px-2">
+          <button onclick="callNextQueue()" class="px-3 py-2 rounded-xl bg-arinna-gold/15 hover:bg-arinna-gold text-arinna-gold hover:text-arinna-bg border border-arinna-gold/40 text-xs font-extrabold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-bullhorn"></i> Panggil Antrian Berikutnya
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: KASIR POS -->
+      <section id="staffPosSection" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Menu Selection Left -->
+        <div class="lg:col-span-7 xl:col-span-8 space-y-4">
+          <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row gap-2.5">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="posSearchInput" oninput="renderPosMenu()" placeholder="Cari kode atau nama menu..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-arinna-bg border border-arinna-border focus:border-arinna-purple focus:outline-none text-xs sm:text-sm text-white placeholder-slate-500" />
+              </div>
+              <div class="px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border flex items-center justify-between sm:justify-center gap-2 text-xs">
+                <span class="text-slate-400">Antrian Baru:</span>
+                <span id="posNextQueueDisplay" class="font-mono font-extrabold text-arinna-gold">A-001</span>
+              </div>
+            </div>
+            <div id="posCategoryBar" class="flex items-center gap-2 overflow-x-auto pb-1"></div>
+          </div>
+
+          <div id="posMenuGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5"></div>
+        </div>
+
+        <!-- POS Cart & Payment Right -->
+        <div class="lg:col-span-5 xl:col-span-4 bg-arinna-surface border border-arinna-border rounded-2xl p-4 sm:p-5 space-y-3.5 lg:sticky lg:top-20">
+          <div class="flex items-center justify-between border-b border-arinna-border pb-2.5">
+            <div>
+              <h3 class="font-display font-bold text-base text-white">Transaksi Kasir</h3>
+              <p id="posLinkedOrderBanner" class="text-[11px] text-emerald-400 hidden font-semibold">Terhubung Order Online</p>
+            </div>
+            <button onclick="resetPosCart()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">Reset</button>
+          </div>
+
+          <!-- Customer Name & Order Type -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">Nama Pelanggan</label>
+              <input type="text" id="posCustomerName" value="Pelanggan Umum" class="w-full px-2.5 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-purple focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">Tipe / Meja</label>
+              <input type="text" id="posOrderType" value="Dine-In • Meja 01" class="w-full px-2.5 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-purple focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- POS Cart Items -->
+          <div id="posCartList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+
+          <!-- Discount & Tax Controls -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-arinna-border">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">Diskon Promo (Rp)</label>
+              <input type="number" id="posDiscountInput" value="0" min="0" step="1000" oninput="renderPosCartTotals()" class="w-full px-2.5 py-1.5 rounded-xl bg-arinna-bg border border-arinna-border text-xs font-mono text-white focus:border-arinna-purple focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">PPN / Pajak Resto</label>
+              <select id="posTaxRate" onchange="renderPosCartTotals()" class="w-full px-2.5 py-1.5 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-purple focus:outline-none">
+                <option value="10">PPN 10%</option>
+                <option value="0">Tanpa Pajak (0%)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Payment Method & Cash Input -->
+          <div class="space-y-2 pt-1">
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="selectPosPaymentMethod('Tunai')" id="payMethodTunai" class="py-2 rounded-lg text-xs font-bold bg-arinna-purple text-white border border-arinna-purple flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-money-bill-wave"></i> Tunai
+              </button>
+              <button type="button" onclick="selectPosPaymentMethod('Digital (QRIS)')" id="payMethodQRIS" class="py-2 rounded-lg text-xs font-bold bg-arinna-bg text-slate-300 border border-arinna-border hover:text-white flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-qrcode"></i> Digital (QRIS)
+              </button>
+            </div>
+
+            <!-- Panel Pembayaran Tunai -->
+            <div id="posCashPaymentPanel">
+              <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                <span>Uang Diterima (Rp)</span>
+                <button type="button" onclick="setExactCash()" class="text-arinna-gold hover:underline font-bold">Uang Pas</button>
+              </div>
+              <input type="number" id="posCashReceived" value="0" min="0" oninput="calculatePosChange()" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-sm font-mono font-bold text-emerald-400 focus:border-arinna-gold focus:outline-none" />
+              <!-- Quick Cash Denominations -->
+              <div class="grid grid-cols-4 gap-1.5 mt-1.5">
+                <button type="button" onclick="setQuickCash(50000)" class="py-1 rounded-lg bg-arinna-card hover:bg-arinna-border text-[10px] font-mono text-slate-200">50rb</button>
+                <button type="button" onclick="setQuickCash(100000)" class="py-1 rounded-lg bg-arinna-card hover:bg-arinna-border text-[10px] font-mono text-slate-200">100rb</button>
+                <button type="button" onclick="setQuickCash(150000)" class="py-1 rounded-lg bg-arinna-card hover:bg-arinna-border text-[10px] font-mono text-slate-200">150rb</button>
+                <button type="button" onclick="setQuickCash(200000)" class="py-1 rounded-lg bg-arinna-card hover:bg-arinna-border text-[10px] font-mono text-slate-200">200rb</button>
+              </div>
+            </div>
+
+            <!-- Panel Pembayaran Digital (QRIS) -->
+            <div id="posQrisPaymentPanel" class="hidden bg-arinna-bg border border-arinna-gold/45 rounded-2xl p-3 space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="font-display font-bold text-arinna-gold flex items-center gap-1.5">
+                  <i class="fa-solid fa-qrcode"></i> Pembayaran Digital QRIS
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Nominal Pas • Kembalian Rp 0
+                </span>
+              </div>
+              <div class="flex items-center gap-2.5 bg-arinna-surface border border-arinna-border rounded-xl p-2">
+                <div class="w-12 h-12 rounded-lg bg-white text-slate-900 flex items-center justify-center shrink-0 border border-slate-300">
+                  <i class="fa-solid fa-qrcode text-2xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[11px] font-bold text-white truncate">QRIS Arinna Cafe &amp; Resto</div>
+                  <div class="text-[10px] text-slate-400">Tagihan: <strong id="posQrisDueAmount" class="font-mono text-arinna-gold">Rp 0</strong></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1">
+                  <span>Kode Referensi QRIS (Opsional / Otomatis)</span>
+                  <button type="button" onclick="generatePosQrisRef(true)" class="text-arinna-gold hover:underline font-bold">Generate Kode</button>
+                </div>
+                <input type="text" id="posQrisRefInput" placeholder="Contoh: QRIS-ARN-88412" class="w-full px-2.5 py-1.5 rounded-xl bg-arinna-surface border border-arinna-border text-xs font-mono text-white focus:border-arinna-gold focus:outline-none" />
+              </div>
+              <label class="flex items-center gap-2 cursor-pointer select-none pt-0.5">
+                <input type="checkbox" id="posQrisVerifiedCheck" checked class="rounded accent-emerald-500" />
+                <span class="text-[11px] text-emerald-300 font-semibold">Pembayaran QRIS telah terverifikasi diterima</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Totals Box -->
+          <div class="bg-arinna-bg border border-arinna-border rounded-xl p-3 space-y-1 text-xs">
+            <div class="flex justify-between text-slate-400"><span>Subtotal</span><span id="posSubtotalText" class="font-mono text-white">Rp 0</span></div>
+            <div class="flex justify-between text-slate-400"><span>Diskon</span><span id="posDiscountText" class="font-mono text-rose-400">- Rp 0</span></div>
+            <div class="flex justify-between text-slate-400"><span>Pajak Resto</span><span id="posTaxText" class="font-mono text-white">Rp 0</span></div>
+            <div class="flex justify-between items-center pt-1.5 border-t border-arinna-border">
+              <span class="font-display font-bold text-sm text-white">GRAND TOTAL</span>
+              <span id="posGrandTotalText" class="font-display font-extrabold text-lg text-arinna-gold">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center pt-1">
+              <span class="text-slate-400">Kembalian</span>
+              <span id="posChangeText" class="font-mono font-bold text-sm text-emerald-400">Rp 0</span>
+            </div>
+          </div>
+
+          <button onclick="processPosCheckout()" class="w-full py-3.5 px-4 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-display font-extrabold text-sm transition shadow-lg shadow-arinna-gold/20 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-print"></i>
+            <span>Bayar &amp; Cetak Struk Resmi</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- TAB 2: PESANAN ONLINE & ANTRIAN DAPUR -->
+      <section id="staffOnlineSection" class="hidden space-y-4">
+        <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="font-display font-bold text-lg text-white">Antrian Pesanan Online &amp; Dapur</h3>
+            <p class="text-xs text-slate-400">Kelola status pesanan dari pelanggan atau tarik pesanan langsung ke mesin Kasir POS.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="px-4 py-2 rounded-xl bg-arinna-bg border border-arinna-gold/40 text-right">
+              <span class="block text-[10px] text-slate-400">Antrian Dipanggil</span>
+              <span id="staffQueueBoardNumber" class="font-mono font-extrabold text-xl text-arinna-gold">A-000</span>
+            </div>
+            <button onclick="callNextQueue()" class="px-4 py-3 rounded-xl bg-arinna-purple hover:bg-arinna-purpleDark text-white font-display font-bold text-xs transition flex items-center gap-2">
+              <i class="fa-solid fa-volume-high"></i> Panggil Berikutnya
+            </button>
+          </div>
+        </div>
+
+        <div id="staffOnlineOrdersGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- TAB 3: KELOLA MENU -->
+      <section id="staffMenuSection" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Form Tambah Menu -->
+        <div class="lg:col-span-4 bg-arinna-surface border border-arinna-border rounded-2xl p-5 space-y-4">
+          <div>
+            <h3 class="font-display font-bold text-base text-white">Tambah Menu Baru</h3>
+            <p class="text-xs text-slate-400">Tambahkan hidangan atau minuman baru ke katalog.</p>
+          </div>
+          <form onsubmit="handleAddNewMenu(event)" class="space-y-3 text-xs">
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Kode Menu *</label>
+                <input type="text" id="newMenuCode" required placeholder="M07 / D07" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-white uppercase font-mono focus:border-arinna-gold focus:outline-none" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Kategori *</label>
+                <select id="newMenuCategory" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-white focus:border-arinna-gold focus:outline-none">
+                  <option value="Makanan Berat">Makanan Berat</option>
+                  <option value="Camilan">Camilan</option>
+                  <option value="Minuman">Minuman</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Nama Hidangan / Minuman *</label>
+              <input type="text" id="newMenuName" required placeholder="Contoh: Sate Ayam Madura" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-white focus:border-arinna-gold focus:outline-none" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Harga Jual (Rp) *</label>
+              <input type="number" id="newMenuPrice" required min="1000" step="500" placeholder="28000" class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-white font-mono focus:border-arinna-gold focus:outline-none" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">URL Foto Makanan (Opsional)</label>
+              <input type="url" id="newMenuImage" placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-white focus:border-arinna-gold focus:outline-none" />
+            </div>
+            <div class="flex items-center gap-2 pt-1">
+              <input type="checkbox" id="newMenuPopular" class="rounded accent-arinna-gold" />
+              <label for="newMenuPopular" class="text-slate-300">Tandai sebagai Menu Favorit / Terlaris</label>
+            </div>
+            <button type="submit" class="w-full py-3 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-display font-extrabold text-xs transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus"></i> Simpan ke Katalog Menu
+            </button>
+          </form>
+        </div>
+
+        <!-- Daftar Menu Manageable -->
+        <div class="lg:col-span-8 bg-arinna-surface border border-arinna-border rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display font-bold text-base text-white">Daftar Menu Aktif (<span id="manageMenuCount">0</span>)</h3>
+            <button onclick="resetDefaultCatalog()" class="text-xs text-slate-400 hover:text-arinna-gold underline">Pulihkan Menu Awal</button>
+          </div>
+          <div id="manageMenuGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
+        </div>
+      </section>
+
+      <!-- TAB 4: LAPORAN PENJUALAN & RIWAYAT STRUK -->
+      <section id="staffReportSection" class="hidden space-y-5">
+        <!-- Filter & Actions Bar -->
+        <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <label class="text-xs font-semibold text-slate-300">Filter Tanggal:</label>
+            <input type="date" id="reportDateFilter" onchange="renderReportsAndHistory()" class="px-3 py-2 rounded-xl bg-arinna-bg border border-arinna-border text-xs text-white focus:border-arinna-gold focus:outline-none" />
+            <button onclick="showAllDatesReport()" class="px-3 py-2 rounded-xl bg-arinna-card hover:bg-arinna-border text-xs font-semibold text-slate-200 transition">Semua Tanggal</button>
+          </div>
+          <button onclick="exportTransactionsCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-file-csv"></i> Ekspor Laporan CSV
+          </button>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Total Omzet Penjualan</span>
+            <div id="kpiTotalRevenue" class="font-display font-extrabold text-xl sm:text-2xl text-arinna-gold mt-1">Rp 0</div>
+            <div class="mt-2 pt-2 border-t border-arinna-border/70 flex items-center justify-between text-[11px]">
+              <span class="text-slate-400">Tunai: <strong id="kpiCashRevenue" class="font-mono text-emerald-400">Rp 0</strong></span>
+              <span class="text-slate-400">Digital/QRIS: <strong id="kpiDigitalRevenue" class="font-mono text-purple-300">Rp 0</strong></span>
+            </div>
+          </div>
+          <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Jumlah Transaksi</span>
+            <div id="kpiTotalTrx" class="font-display font-extrabold text-xl sm:text-2xl text-white mt-1">0</div>
+            <div class="mt-2 pt-2 border-t border-arinna-border/70 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Tunai: <strong id="kpiCashCount" class="font-mono text-white">0</strong></span>
+              <span>Digital/QRIS: <strong id="kpiDigitalCount" class="font-mono text-white">0</strong></span>
+            </div>
+          </div>
+          <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Total Porsi / Item Terjual</span>
+            <div id="kpiTotalItems" class="font-display font-extrabold text-xl sm:text-2xl text-purple-300 mt-1">0</div>
+          </div>
+          <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Rata-rata Nilai Struk</span>
+            <div id="kpiAvgTrx" class="font-display font-extrabold text-xl sm:text-2xl text-emerald-400 mt-1">Rp 0</div>
+          </div>
+        </div>
+
+        <!-- Category Sales Bar Breakdown -->
+        <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-5 space-y-3">
+          <h4 class="font-display font-bold text-sm text-white">Distribusi Penjualan per Kategori</h4>
+          <div id="categorySalesBars" class="space-y-2.5 text-xs"></div>
+        </div>
+
+        <!-- Transaction History Table -->
+        <div class="bg-arinna-surface border border-arinna-border rounded-2xl overflow-hidden">
+          <div class="p-4 border-b border-arinna-border">
+            <h4 class="font-display font-bold text-sm text-white">Riwayat Transaksi &amp; Cetak Ulang Struk</h4>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-arinna-bg text-slate-400 uppercase text-[10px]">
+                <tr>
+                  <th class="py-3 px-4">No. Struk</th>
+                  <th class="py-3 px-4">Antrian</th>
+                  <th class="py-3 px-4">Waktu</th>
+                  <th class="py-3 px-4">Pelanggan</th>
+                  <th class="py-3 px-4">Metode</th>
+                  <th class="py-3 px-4 text-right">Total</th>
+                  <th class="py-3 px-4 text-center">Aksi Struk</th>
+                </tr>
+              </thead>
+              <tbody id="transactionHistoryBody" class="divide-y divide-arinna-border text-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 3. MODAL TIKET ANTRIAN PELANGGAN (SAAT PESANAN ONLINE DIKIRIM)        -->
+  <!-- ===================================================================== -->
+  <div id="queueTicketModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+    <div class="bg-arinna-surface border border-arinna-gold/60 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl animate-fade-up">
+      <div class="flex items-center justify-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-arinna-bg border border-arinna-gold/60 flex items-center justify-center">
+          <svg viewBox="0 0 64 64" class="w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="#D4AF37" stroke-width="2.5" />
+            <path d="M22 16L27 21L32 14L37 21L42 16L40 23H24L22 16Z" fill="#D4AF37" />
+            <path d="M32 25L44 50H38.8L36 43.5H28L25.2 50H20L32 25ZM29.4 39.2H34.6L32 32.8L29.4 39.2Z" fill="#F3D266" />
+          </svg>
+        </div>
+        <div class="text-left">
+          <div class="font-display font-extrabold text-sm text-white">ARINNA <span class="text-arinna-gold">CAFE &amp; RESTO</span></div>
+          <div class="text-[11px] text-slate-400">Jl. DR. Cipto No.99, Kolor, Sumenep</div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2">
+        <i class="fa-solid fa-circle-check text-sm"></i>
+        <span>Pesanan Online &amp; Nomor Antrian Berhasil Dibuat!</span>
+      </div>
+
+      <div class="bg-arinna-bg border-2 border-dashed border-arinna-gold rounded-2xl p-4 space-y-1">
+        <span class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Nomor Antrian Anda</span>
+        <div id="modalQueueNumber" class="font-display font-extrabold text-4xl text-arinna-gold tracking-wider">A-001</div>
+        <p id="modalQueueMeta" class="text-xs text-slate-300 pt-1">Dine-In • Meja 05</p>
+        <p id="modalQueueEstimate" class="text-[11px] text-amber-300 font-medium pt-0.5">Estimasi penyajian: ± 10-15 menit</p>
+      </div>
+
+      <div id="modalQueueItemsSummary" class="bg-arinna-bg/80 border border-arinna-border rounded-xl p-3 text-left text-xs space-y-1.5 max-h-32 overflow-y-auto"></div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+        <button onclick="printLatestCustomerTicket()" class="py-2.5 px-3 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg text-xs font-extrabold transition flex items-center justify-center gap-1.5 shadow-lg shadow-arinna-gold/20">
+          <i class="fa-solid fa-print"></i> Cetak / Simpan Tiket
+        </button>
+        <button onclick="closeQueueModal(); switchCustomerSubTab('tickets');" class="py-2.5 px-3 rounded-xl bg-arinna-purple hover:bg-arinna-purpleDark text-white text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-ticket"></i> Pantau Antrian Saya
+        </button>
+      </div>
+      <button onclick="closeQueueModal()" class="w-full py-2 rounded-xl bg-arinna-card hover:bg-arinna-border text-slate-300 hover:text-white text-xs font-semibold transition">
+        Tutup Jendela
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 4. MODAL STRUK PEMBAYARAN / TIKET ANTRIAN (SIAP CETAK THERMAL 80MM)   -->
+  <!-- ===================================================================== -->
+  <div id="receiptModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-arinna-surface border border-arinna-border rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-arinna-border pb-3 no-print">
+        <div>
+          <h3 id="receiptModalTitle" class="font-display font-bold text-base text-white">Pratinjau Struk Pembayaran</h3>
+          <p class="text-[11px] text-slate-400">Siap cetak printer thermal 58mm/80mm atau PDF</p>
+        </div>
+        <button onclick="closeReceiptModal()" class="w-8 h-8 rounded-full bg-arinna-card text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Area Struk yang Dicetak -->
+      <div id="receiptPrintArea" class="bg-white text-slate-900 rounded-2xl p-5 font-mono text-xs space-y-3 max-h-[62vh] overflow-y-auto shadow-inner">
+        <div class="text-center border-b border-dashed border-slate-400 pb-3 space-y-1">
+          <!-- Logo Hitam Putih Kontras Tinggi untuk Cetak Struk -->
+          <svg viewBox="0 0 64 64" class="w-10 h-10 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="#000000" stroke-width="2.5" />
+            <path d="M22 16L27 21L32 14L37 21L42 16L40 23H24L22 16Z" fill="#000000" />
+            <path d="M32 25L44 50H38.8L36 43.5H28L25.2 50H20L32 25ZM29.4 39.2H34.6L32 32.8L29.4 39.2Z" fill="#000000" />
+          </svg>
+          <div class="font-bold text-sm tracking-wide text-black">ARINNA CAFE &amp; RESTO</div>
+          <div class="text-[11px] text-slate-800">Jl. DR. Cipto No.99, Kolor, Sumenep</div>
+          <div id="rcpDocTypeLabel" class="text-[10px] font-bold uppercase tracking-wider text-slate-700 pt-0.5">STRUK PEMBAYARAN RESMI</div>
+          <div class="mt-2 inline-block px-3 py-1 border-2 border-black font-bold text-sm text-black">
+            ANTRIAN: <span id="rcpQueue">A-001</span>
+          </div>
+        </div>
+
+        <div class="space-y-1 text-[11px] border-b border-dashed border-slate-400 pb-2.5 text-black">
+          <div class="flex justify-between"><span>No. Struk:</span><span id="rcpId" class="font-bold">-</span></div>
+          <div class="flex justify-between"><span>Waktu:</span><span id="rcpTime">-</span></div>
+          <div class="flex justify-between"><span id="rcpCashierLabel">Kasir:</span><span id="rcpCashier">-</span></div>
+          <div class="flex justify-between"><span>Pelanggan:</span><span id="rcpCustomer">-</span></div>
+        </div>
+
+        <div id="rcpItemsList" class="space-y-1.5 border-b border-dashed border-slate-400 pb-2.5 text-black"></div>
+
+        <div class="space-y-1 text-[11px] text-black">
+          <div class="flex justify-between"><span>Subtotal</span><span id="rcpSubtotal">Rp 0</span></div>
+          <div id="rcpDiscountRow" class="flex justify-between hidden"><span>Diskon</span><span id="rcpDiscount">- Rp 0</span></div>
+          <div class="flex justify-between"><span>Pajak Resto</span><span id="rcpTax">Rp 0</span></div>
+          <div class="flex justify-between font-bold text-sm border-t border-black pt-1">
+            <span id="rcpTotalLabel">TOTAL</span><span id="rcpTotal">Rp 0</span>
+          </div>
+          <div id="rcpPaymentRows" class="space-y-1 pt-1">
+            <div class="flex justify-between"><span>Bayar (<span id="rcpMethod">Tunai</span>)</span><span id="rcpPaid">Rp 0</span></div>
+            <div class="flex justify-between font-bold"><span>Kembalian</span><span id="rcpChange">Rp 0</span></div>
+          </div>
+        </div>
+
+        <div id="rcpFooterNote" class="text-center text-[11px] text-slate-800 pt-2 border-t border-dashed border-slate-400">
+          Terima kasih atas kunjungan Anda di<br />Arinna Cafe &amp; Resto Sumenep!
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Cetak & Salin WhatsApp -->
+      <div class="space-y-2 no-print">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button onclick="window.print()" id="btnPrintReceiptAction" class="py-2.5 px-3 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-display font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-arinna-gold/20 transition">
+            <i class="fa-solid fa-print"></i> Cetak Struk (Thermal)
+          </button>
+          <button onclick="copyReceiptTextToClipboard()" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-bold text-xs flex items-center justify-center gap-2 transition">
+            <i class="fa-brands fa-whatsapp text-sm"></i> Salin Teks Struk (WA)
+          </button>
+        </div>
+        <button onclick="closeReceiptModal()" class="w-full py-2 rounded-xl bg-arinna-card text-slate-300 hover:text-white text-xs font-bold transition">
+          Tutup Pratinjau
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 5. JAVASCRIPT APPLICATION LOGIC                                       -->
+  <!-- ===================================================================== -->
+  <script>
+    // --- STORAGE KEYS ---
+    const KEYS = {
+      SESSION: 'arinna_pos_session_v3',
+      MENU: 'arinna_pos_menu_v3',
+      ORDERS: 'arinna_pos_online_orders_v3',
+      TRANSACTIONS: 'arinna_pos_transactions_v3',
+      QUEUE_COUNTER: 'arinna_pos_queue_counter_v3',
+      NOW_SERVING: 'arinna_pos_now_serving_v3',
+      CUSTOMER_ACCOUNTS: 'arinna_pos_customer_accounts_v1'
+    };
+
+    const MEMORY_STORAGE = {};
+
+    function safeStorageGet(key) {
+      try {
+        const val = localStorage.getItem(key);
+        if (val !== null) return val;
+      } catch (e) {}
+      return Object.prototype.hasOwnProperty.call(MEMORY_STORAGE, key) ? MEMORY_STORAGE[key] : null;
+    }
+
+    function safeStorageSet(key, val) {
+      MEMORY_STORAGE[key] = val;
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
+
+    function safeStorageRemove(key) {
+      delete MEMORY_STORAGE[key];
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {}
+    }
+
+    const DIGITAL_SUBCHANNELS = {
+      'Transfer Bank': [
+        { label: 'Bank BCA — 7890123456 a.n. Arinna Resto Sumenep', code: 'BCA 7890123456' },
+        { label: 'Bank Mandiri — 1400098765432 a.n. Arinna Resto', code: 'MANDIRI 1400098765432' },
+        { label: 'Bank BRI — 009801004567502 a.n. Arinna Cafe', code: 'BRI 009801004567502' }
+      ],
+      'E-Wallet': [
+        { label: 'GoPay — 0812-3456-7890 a.n. Arinna Cafe & Resto', code: 'GOPAY 081234567890' },
+        { label: 'OVO — 0812-3456-7890 a.n. Arinna Cafe & Resto', code: 'OVO 081234567890' },
+        { label: 'DANA — 0812-3456-7890 a.n. Arinna Cafe & Resto', code: 'DANA 081234567890' }
+      ]
+    };
+
+    // --- FALLBACK SVG ILLUSTRATION GENERATOR ---
+    function getFallbackDishSvg(title, category) {
+      const bg = category === 'Minuman' ? '#1E1B4B' : category === 'Camilan' ? '#3B1D36' : '#261C3A';
+      const accent = '#D4AF37';
+      const safeTitle = String(title || 'Arinna Menu').slice(0, 22).replace(/[<>&'"]/g, '');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+        <rect width="600" height="400" fill="${bg}"/>
+        <circle cx="300" cy="175" r="82" fill="none" stroke="${accent}" stroke-width="4" stroke-dasharray="10 6"/>
+        <circle cx="300" cy="175" r="56" fill="${accent}" fill-opacity="0.16"/>
+        <text x="300" y="185" font-family="sans-serif" font-size="38" font-weight="bold" fill="${accent}" text-anchor="middle">ARINNA</text>
+        <text x="300" y="305" font-family="sans-serif" font-size="22" font-weight="bold" fill="#F8FAFC" text-anchor="middle">${safeTitle}</text>
+        <text x="300" y="338" font-family="sans-serif" font-size="14" fill="#CBD5E1" text-anchor="middle">Arinna Cafe &amp; Resto Sumenep</text>
+      </svg>`;
+      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    // --- DEFAULT MENU CATALOG (12 AUTHENTIC DISHES & DRINKS WITH UNSPLASH PHOTOS) ---
+    const DEFAULT_MENU = [
+      {
+        code: 'M01',
+        name: 'Iga Bakar Madu Arinna',
+        category: 'Makanan Berat',
+        price: 45000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'M02',
+        name: 'Nasi Goreng Seafood Spesial',
+        category: 'Makanan Berat',
+        price: 28000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'M03',
+        name: 'Sirloin Steak Blackpepper',
+        category: 'Makanan Berat',
+        price: 58000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'M04',
+        name: 'Ayam Geprek Sambal Matah',
+        category: 'Makanan Berat',
+        price: 24000,
+        popular: false,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'M05',
+        name: 'Sop Buntut Khas Sumenep',
+        category: 'Makanan Berat',
+        price: 48000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'M06',
+        name: 'Bebek Goreng Bumbu Madura',
+        category: 'Makanan Berat',
+        price: 35000,
+        popular: false,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'C01',
+        name: 'Pisang Bakar Keju Coklat',
+        category: 'Camilan',
+        price: 18000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'C02',
+        name: 'French Fries & Sosis Platter',
+        category: 'Camilan',
+        price: 20000,
+        popular: false,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'D01',
+        name: 'Es Teh Manis Jumbo',
+        category: 'Minuman',
+        price: 8000,
+        popular: false,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'D02',
+        name: 'Kopi Susu Gula Aren Arinna',
+        category: 'Minuman',
+        price: 18000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'D03',
+        name: 'Jus Alpukat Coklat Lumer',
+        category: 'Minuman',
+        price: 17000,
+        popular: false,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'D04',
+        name: 'Lemon Tea Mint Segar',
+        category: 'Minuman',
+        price: 14000,
+        popular: false,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        code: 'D05',
+        name: 'Signature Matcha Latte',
+        category: 'Minuman',
+        price: 21000,
+        popular: true,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=800&q=80'
+      }
+    ];
+
+    // --- GLOBAL STATE ---
+    let currentSession = null;
+    let menuCatalog = [];
+    let customerCart = [];
+    let posCart = [];
+    let posPaymentMethod = 'Tunai';
+    let activeLinkedOnlineOrderId = null;
+    let currentCustomerCategory = 'Semua';
+    let currentPosCategory = 'Semua';
+    let latestSubmittedCustomerOrder = null;
+    let activeReceiptPlainText = '';
+    let currentCustomerDigitalRef = '';
+    let staffFailedAttempts = 0;
+
+    // Daftar akun kasir/staff valid (sandi dicocokkan secara eksak)
+    const STAFF_ACCOUNTS = {
+      kasir: {
+        username: 'kasir',
+        password: 'arinna123',
+        staffRole: 'Kasir Utama',
+        name: 'Kasir Arinna (Shift 1)'
+      },
+      kasir2: {
+        username: 'kasir2',
+        password: 'sumenep2026',
+        staffRole: 'Kasir Shift 2',
+        name: 'Kasir Sumenep (Shift 2)'
+      },
+      admin: {
+        username: 'admin',
+        password: 'admin123',
+        staffRole: 'Supervisor / Admin',
+        name: 'Admin Arinna Resto'
+      }
+    };
+
+    // --- UTILITIES ---
+    function formatRupiah(amount) {
+      const num = Math.round(Number(amount) || 0);
+      return 'Rp ' + num.toLocaleString('id-ID');
+    }
+
+    function getTodayDateString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDateTime(isoString) {
+      const d = new Date(isoString);
+      return d.toLocaleString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-950/95 border-emerald-500/60 text-emerald-200',
+        error: 'bg-rose-950/95 border-rose-500/60 text-rose-200',
+        info: 'bg-arinna-surface/95 border-arinna-gold/60 text-slate-100'
+      };
+      const icons = {
+        success: 'fa-circle-check text-emerald-400',
+        error: 'fa-circle-exclamation text-rose-400',
+        info: 'fa-bell text-arinna-gold'
+      };
+      toast.className = `pointer-events-auto border rounded-2xl px-4 py-3 shadow-xl backdrop-blur-md flex items-center gap-3 text-xs font-medium animate-fade-up ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm"></i><span class="flex-1">${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(6px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+      }, 3200);
+    }
+
+    // --- STORAGE HELPERS ---
+    function loadMenuCatalog() {
+      try {
+        const raw = safeStorageGet(KEYS.MENU);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+      const copy = JSON.parse(JSON.stringify(DEFAULT_MENU));
+      safeStorageSet(KEYS.MENU, JSON.stringify(copy));
+      return copy;
+    }
+
+    function saveMenuCatalog(list) {
+      menuCatalog = list;
+      safeStorageSet(KEYS.MENU, JSON.stringify(list));
+    }
+
+    function getOnlineOrders() {
+      try {
+        return JSON.parse(safeStorageGet(KEYS.ORDERS)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOnlineOrders(list) {
+      safeStorageSet(KEYS.ORDERS, JSON.stringify(list));
+    }
+
+    function getTransactions() {
+      try {
+        return JSON.parse(safeStorageGet(KEYS.TRANSACTIONS)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveTransactions(list) {
+      safeStorageSet(KEYS.TRANSACTIONS, JSON.stringify(list));
+    }
+
+    // --- DAILY QUEUE SYSTEM ---
+    function getQueueState() {
+      const today = getTodayDateString();
+      try {
+        const raw = JSON.parse(safeStorageGet(KEYS.QUEUE_COUNTER));
+        if (raw && raw.date === today) {
+          return raw;
+        }
+      } catch (e) {}
+      const init = { date: today, lastNumber: 0 };
+      safeStorageSet(KEYS.QUEUE_COUNTER, JSON.stringify(init));
+      return init;
+    }
+
+    function peekNextQueueNumber() {
+      const state = getQueueState();
+      return 'A-' + String(state.lastNumber + 1).padStart(3, '0');
+    }
+
+    function allocateNextQueueNumber() {
+      const state = getQueueState();
+      state.lastNumber += 1;
+      safeStorageSet(KEYS.QUEUE_COUNTER, JSON.stringify(state));
+      const code = 'A-' + String(state.lastNumber).padStart(3, '0');
+      updateQueueDisplays();
+      return code;
+    }
+
+    function getNowServingNumber() {
+      const today = getTodayDateString();
+      try {
+        const raw = JSON.parse(safeStorageGet(KEYS.NOW_SERVING));
+        if (raw && raw.date === today) return raw.code;
+      } catch (e) {}
+      return 'A-000';
+    }
+
+    function setNowServingNumber(code) {
+      safeStorageSet(KEYS.NOW_SERVING, JSON.stringify({
+        date: getTodayDateString(),
+        code
+      }));
+      updateQueueDisplays();
+    }
+
+    function callNextQueue() {
+      const current = getNowServingNumber();
+      const num = parseInt(current.replace('A-', ''), 10) || 0;
+      const queueState = getQueueState();
+      const nextNum = num + 1;
+      if (nextNum > queueState.lastNumber && queueState.lastNumber > 0) {
+        showToast('Semua nomor antrian yang terdaftar sudah dipanggil.', 'info');
+      }
+      const nextCode = 'A-' + String(nextNum).padStart(3, '0');
+      setNowServingNumber(nextCode);
+      showToast(`Memanggil Nomor Antrian ${nextCode}`, 'success');
+    }
+
+    function updateQueueDisplays() {
+      const nowServing = getNowServingNumber();
+      const nextQueue = peekNextQueueNumber();
+
+      const idsServing = ['loginCurrentServingBadge', 'headerNowServing', 'custBoardNowServing', 'staffQueueBoardNumber'];
+      idsServing.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = nowServing;
+      });
+
+      const elCustNext = document.getElementById('custNextQueuePreview');
+      if (elCustNext) elCustNext.textContent = nextQueue;
+
+      const elPosNext = document.getElementById('posNextQueueDisplay');
+      if (elPosNext) elPosNext.textContent = nextQueue;
+    }
+
+    // --- LOGIN & SESSION MANAGEMENT ---
+    function switchLoginRole(role) {
+      const tabCust = document.getElementById('roleTabCustomer');
+      const tabStaff = document.getElementById('roleTabStaff');
+      const wrapCust = document.getElementById('customerAuthContainer');
+      const formStaff = document.getElementById('staffLoginForm');
+
+      if (role === 'customer') {
+        tabCust.className = 'py-2.5 px-3 rounded-xl font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-arinna-gold text-arinna-bg shadow-lg';
+        tabStaff.className = 'py-2.5 px-3 rounded-xl font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+        wrapCust.classList.remove('hidden');
+        formStaff.classList.add('hidden');
+        clearStaffLoginError();
+      } else {
+        tabStaff.className = 'py-2.5 px-3 rounded-xl font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-arinna-purple text-white shadow-lg';
+        tabCust.className = 'py-2.5 px-3 rounded-xl font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+        formStaff.classList.remove('hidden');
+        wrapCust.classList.add('hidden');
+        clearCustomerAuthError();
+      }
+    }
+
+    function switchCustomerAuthMode(mode) {
+      const loginBtn = document.getElementById('custAuthModeLoginBtn');
+      const regBtn = document.getElementById('custAuthModeRegisterBtn');
+      const loginForm = document.getElementById('customerLoginForm');
+      const regForm = document.getElementById('customerRegisterForm');
+
+      clearCustomerAuthFeedback();
+      if (mode === 'register') {
+        regBtn.className = 'flex-1 py-2 rounded-lg font-bold bg-arinna-card text-arinna-gold transition';
+        loginBtn.className = 'flex-1 py-2 rounded-lg font-bold text-slate-400 hover:text-white transition';
+        regForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        const nameInput = document.getElementById('custRegName');
+        if (nameInput) nameInput.focus();
+      } else {
+        loginBtn.className = 'flex-1 py-2 rounded-lg font-bold bg-arinna-card text-arinna-gold transition';
+        regBtn.className = 'flex-1 py-2 rounded-lg font-bold text-slate-400 hover:text-white transition';
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+        renderRegisteredCustomerChips();
+        const nameInput = document.getElementById('custLoginName');
+        if (nameInput) nameInput.focus();
+      }
+    }
+
+    function clearCustomerAuthFeedback() {
+      const errBox = document.getElementById('custAuthErrorBox');
+      const okBox = document.getElementById('custAuthSuccessBox');
+      if (errBox) errBox.classList.add('hidden');
+      if (okBox) okBox.classList.add('hidden');
+    }
+
+    function showCustomerAuthError(msg) {
+      const box = document.getElementById('custAuthErrorBox');
+      const text = document.getElementById('custAuthErrorMsg');
+      const okBox = document.getElementById('custAuthSuccessBox');
+      if (okBox) okBox.classList.add('hidden');
+      if (!box || !text) return;
+      text.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    function showCustomerAuthSuccess(msg) {
+      const box = document.getElementById('custAuthSuccessBox');
+      const text = document.getElementById('custAuthSuccessMsg');
+      const errBox = document.getElementById('custAuthErrorBox');
+      if (errBox) errBox.classList.add('hidden');
+      if (!box || !text) return;
+      text.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    function getCustomerAccounts() {
+      try {
+        const list = JSON.parse(safeStorageGet(KEYS.CUSTOMER_ACCOUNTS));
+        return Array.isArray(list) ? list : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomerAccounts(list) {
+      safeStorageSet(KEYS.CUSTOMER_ACCOUNTS, JSON.stringify(list));
+    }
+
+    function handleCustomerRegister(e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const nameInput = document.getElementById('custRegName');
+      const phoneInput = document.getElementById('custRegPhone');
+      const passInput = document.getElementById('custRegPass');
+      const confirmInput = document.getElementById('custRegPassConfirm');
+
+      const name = (nameInput ? nameInput.value : '').trim().replace(/\s+/g, ' ');
+      const phone = (phoneInput ? phoneInput.value : '').trim();
+      const password = passInput ? passInput.value : '';
+      const confirmPassword = confirmInput ? confirmInput.value : '';
+
+      if (!name || name.length < 2) {
+        showCustomerAuthError('Nama lengkap wajib diisi minimal 2 karakter.');
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      const cleanPhone = phone.replace(/[^\d+]/g, '');
+      const digitOnlyCount = cleanPhone.replace(/\D/g, '').length;
+      if (!cleanPhone || digitOnlyCount < 8) {
+        showCustomerAuthError('Nomor HP wajib diisi minimal 8 digit angka.');
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+      if (!password || password.length < 4) {
+        showCustomerAuthError('Kata sandi wajib diisi minimal 4 karakter.');
+        if (passInput) passInput.focus();
+        return;
+      }
+      if (confirmPassword !== password) {
+        showCustomerAuthError('Konfirmasi kata sandi tidak sama dengan kata sandi.');
+        if (confirmInput) {
+          confirmInput.value = '';
+          confirmInput.focus();
+        }
+        return;
+      }
+
+      const accounts = getCustomerAccounts();
+      const exists = accounts.some(acc => acc.name.trim().toLowerCase() === name.toLowerCase());
+      if (exists) {
+        showCustomerAuthError(`Akun dengan nama "${name}" sudah terdaftar. Silakan masuk di tab Masuk atau gunakan nama lain.`);
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
+      const newAcc = {
+        id: 'CUST-' + Date.now().toString().slice(-6),
+        name,
+        phone: cleanPhone,
+        password,
+        createdAt: new Date().toISOString()
+      };
+      accounts.unshift(newAcc);
+      saveCustomerAccounts(accounts);
+
+      if (passInput) passInput.value = '';
+      if (confirmInput) confirmInput.value = '';
+      clearCustomerAuthFeedback();
+
+      establishSession({
+        role: 'customer',
+        customerId: newAcc.id,
+        name: newAcc.name,
+        phone: newAcc.phone,
+        loginAt: new Date().toISOString()
+      });
+      showToast(`Akun berhasil dibuat! Selamat datang di Arinna Resto, ${newAcc.name}.`, 'success');
+    }
+
+    function handleCustomerLogin(e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const nameInput = document.getElementById('custLoginName');
+      const passInput = document.getElementById('custLoginPass');
+
+      const name = (nameInput ? nameInput.value : '').trim().replace(/\s+/g, ' ');
+      const password = passInput ? passInput.value : '';
+
+      if (!name && !password) {
+        showCustomerAuthError('Nama akun dan kata sandi wajib diisi untuk masuk.');
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      if (!name) {
+        showCustomerAuthError('Nama akun pelanggan wajib diisi.');
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      if (!password) {
+        showCustomerAuthError('Kata sandi wajib diisi.');
+        if (passInput) passInput.focus();
+        return;
+      }
+
+      const accounts = getCustomerAccounts();
+      const found = accounts.find(acc => acc.name.trim().toLowerCase() === name.toLowerCase());
+      if (!found) {
+        showCustomerAuthError(`Akun dengan nama "${name}" belum ditemukan. Klik "Buat Akun Baru" terlebih dahulu.`);
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      if (found.password !== password) {
+        showCustomerAuthError('Kata sandi salah. Silakan periksa kembali kata sandi Anda.');
+        if (passInput) {
+          passInput.value = '';
+          passInput.focus();
+        }
+        return;
+      }
+
+      if (passInput) passInput.value = '';
+      clearCustomerAuthFeedback();
+
+      establishSession({
+        role: 'customer',
+        customerId: found.id,
+        name: found.name,
+        phone: found.phone,
+        loginAt: new Date().toISOString()
+      });
+      showToast(`Selamat datang kembali, ${found.name}!`, 'success');
+    }
+
+    function togglePasswordField(inputId, iconId) {
+      const passInput = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!passInput || !icon) return;
+      const isHidden = passInput.type === 'password';
+      passInput.type = isHidden ? 'text' : 'password';
+      icon.className = isHidden ? 'fa-solid fa-eye-slash text-xs text-arinna-gold' : 'fa-solid fa-eye text-xs';
+    }
+
+    function checkStaffCapsLock(event) {
+      const badge = document.getElementById('staffCapsLockWarning');
+      if (!badge || !event || typeof event.getModifierState !== 'function') return;
+      const active = event.getModifierState('CapsLock');
+      badge.classList.toggle('hidden', !active);
+    }
+
+    function clearStaffLoginError() {
+      const errBox = document.getElementById('staffLoginErrorBox');
+      if (errBox) errBox.classList.add('hidden');
+    }
+
+    function showStaffLoginError(message) {
+      const errBox = document.getElementById('staffLoginErrorBox');
+      const errMsg = document.getElementById('staffLoginErrorMsg');
+      const attemptMeta = document.getElementById('staffLoginAttemptMeta');
+      if (!errBox || !errMsg) return;
+
+      errMsg.textContent = message;
+      errBox.classList.remove('hidden');
+
+      if (attemptMeta && staffFailedAttempts > 0) {
+        attemptMeta.textContent = `Percobaan login gagal: ${staffFailedAttempts}x • Pastikan huruf besar/kecil sandi sesuai.`;
+        attemptMeta.classList.remove('hidden');
+      }
+    }
+
+    function copyTestCredentialsToInputs() {
+      const userInput = document.getElementById('staffLoginUser');
+      const passInput = document.getElementById('staffLoginPass');
+      if (!userInput || !passInput) return;
+
+      userInput.value = 'kasir';
+      passInput.value = 'arinna123';
+      clearStaffLoginError();
+      showToast('Kredensial uji (kasir / arinna123) diisikan ke form. Klik "Masuk ke Dashboard Kasir".', 'info');
+      passInput.focus();
+    }
+
+    function handleStaffLogin(e) {
+      if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+      }
+
+      const userInput = document.getElementById('staffLoginUser');
+      const passInput = document.getElementById('staffLoginPass');
+      const rawUser = (userInput ? userInput.value : '').trim().toLowerCase();
+      const rawPass = passInput ? passInput.value : '';
+
+      if (!rawUser && !rawPass) {
+        staffFailedAttempts += 1;
+        showStaffLoginError('Username kasir dan sandi wajib diisi sebelum masuk ke dashboard.');
+        if (userInput) userInput.focus();
+        return;
+      }
+
+      if (!rawUser) {
+        staffFailedAttempts += 1;
+        showStaffLoginError('Username / ID Kasir tidak boleh kosong.');
+        if (userInput) userInput.focus();
+        return;
+      }
+
+      if (!rawPass || rawPass.trim() === '') {
+        staffFailedAttempts += 1;
+        showStaffLoginError('Sandi / Password wajib diisi. Login kasir tidak dapat dilakukan tanpa sandi.');
+        if (passInput) passInput.focus();
+        return;
+      }
+
+      const account = STAFF_ACCOUNTS[rawUser];
+      if (!account) {
+        staffFailedAttempts += 1;
+        showStaffLoginError(`Akun kasir "${rawUser}" tidak ditemukan. Gunakan akun terdaftar (kasir, kasir2, atau admin).`);
+        if (userInput) userInput.focus();
+        return;
+      }
+
+      if (rawPass !== account.password) {
+        staffFailedAttempts += 1;
+        showStaffLoginError(`Sandi salah untuk akun "${account.username}". Periksa kembali sandi Anda.`);
+        if (passInput) {
+          passInput.value = '';
+          passInput.focus();
+        }
+        return;
+      }
+
+      // Login valid dengan sandi yang cocok
+      staffFailedAttempts = 0;
+      clearStaffLoginError();
+      if (passInput) {
+        passInput.value = '';
+        passInput.type = 'password';
+      }
+      const eyeIcon = document.getElementById('toggleStaffPasswordIcon');
+      if (eyeIcon) eyeIcon.className = 'fa-solid fa-eye text-xs';
+
+      establishSession({
+        role: 'staff',
+        staffRole: account.staffRole,
+        name: account.name,
+        username: account.username,
+        loginAt: new Date().toISOString()
+      });
+      showToast(`Login berhasil! Bertugas sebagai ${account.name} (${account.staffRole}).`, 'success');
+    }
+
+    function establishSession(sessionObj) {
+      currentSession = sessionObj;
+      safeStorageSet(KEYS.SESSION, JSON.stringify(sessionObj));
+      renderWorkspaceForSession();
+    }
+
+    function handleLogout() {
+      currentSession = null;
+      safeStorageRemove(KEYS.SESSION);
+      document.getElementById('mainAppShell').classList.add('hidden');
+      document.getElementById('authGateView').classList.remove('hidden');
+      updateQueueDisplays();
+      showToast('Anda telah keluar dari sesi.', 'info');
+    }
+
+    function renderWorkspaceForSession() {
+      if (!currentSession) {
+        document.getElementById('authGateView').classList.remove('hidden');
+        document.getElementById('mainAppShell').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('authGateView').classList.add('hidden');
+      document.getElementById('mainAppShell').classList.remove('hidden');
+
+      const roleBadge = document.getElementById('headerRoleBadge');
+      const userNameEl = document.getElementById('headerUserName');
+      const userSubEl = document.getElementById('headerUserSub');
+
+      if (currentSession.role === 'customer') {
+        roleBadge.textContent = 'PELANGGAN';
+        roleBadge.className = 'text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-arinna-gold/20 text-arinna-gold border border-arinna-gold/40';
+        userNameEl.textContent = currentSession.name;
+        userSubEl.textContent = currentSession.phone;
+
+        document.getElementById('customerWorkspace').classList.remove('hidden');
+        document.getElementById('staffWorkspace').classList.add('hidden');
+
+        renderCustomerCategories();
+        renderCustomerMenu();
+        renderCustomerCart();
+        renderCustomerTickets();
+      } else {
+        const verifiedAccount = currentSession.username ? STAFF_ACCOUNTS[currentSession.username.toLowerCase()] : null;
+        if (!verifiedAccount) {
+          handleLogout();
+          showStaffLoginError('Sesi kasir memerlukan login sandi yang valid.');
+          return;
+        }
+        currentSession.staffRole = verifiedAccount.staffRole;
+        currentSession.name = verifiedAccount.name;
+
+        roleBadge.textContent = currentSession.staffRole;
+        roleBadge.className = 'text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-arinna-purple/25 text-purple-200 border border-arinna-purple/40';
+        userNameEl.textContent = currentSession.name;
+        userSubEl.textContent = `@${currentSession.username} • Terverifikasi`;
+
+        document.getElementById('staffWorkspace').classList.remove('hidden');
+        document.getElementById('customerWorkspace').classList.add('hidden');
+
+        document.getElementById('reportDateFilter').value = getTodayDateString();
+        renderPosCategories();
+        renderPosMenu();
+        renderPosCart();
+        renderStaffOnlineOrders();
+        renderManageMenu();
+        renderReportsAndHistory();
+      }
+      updateQueueDisplays();
+    }
+
+    // --- CUSTOMER WORKSPACE LOGIC ---
+    function switchCustomerSubTab(tab) {
+      const btnOrder = document.getElementById('custTabOrderBtn');
+      const btnTickets = document.getElementById('custTabTicketsBtn');
+      const secOrder = document.getElementById('customerOrderSection');
+      const secTickets = document.getElementById('customerTicketsSection');
+
+      if (tab === 'order') {
+        btnOrder.className = 'px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm bg-arinna-gold text-arinna-bg transition flex items-center gap-2';
+        btnTickets.className = 'px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2';
+        secOrder.classList.remove('hidden');
+        secTickets.classList.add('hidden');
+      } else {
+        btnTickets.className = 'px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm bg-arinna-gold text-arinna-bg transition flex items-center gap-2';
+        btnOrder.className = 'px-4 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2';
+        secTickets.classList.remove('hidden');
+        secOrder.classList.add('hidden');
+        renderCustomerTickets();
+      }
+    }
+
+    function toggleCustTableField() {
+      const type = document.getElementById('custOrderType').value;
+      const wrap = document.getElementById('custTableWrapper');
+      if (type === 'Takeaway') {
+        wrap.classList.add('opacity-40', 'pointer-events-none');
+      } else {
+        wrap.classList.remove('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function renderCustomerCategories() {
+      const categories = ['Semua', 'Makanan Berat', 'Camilan', 'Minuman'];
+      const bar = document.getElementById('custCategoryBar');
+      bar.innerHTML = categories.map(cat => {
+        const active = currentCustomerCategory === cat;
+        return `<button onclick="setCustomerCategory('${cat}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${active ? 'bg-arinna-gold text-arinna-bg' : 'bg-arinna-bg text-slate-300 border border-arinna-border hover:text-white'}">${cat}</button>`;
+      }).join('');
+    }
+
+    function setCustomerCategory(cat) {
+      currentCustomerCategory = cat;
+      renderCustomerCategories();
+      renderCustomerMenu();
+    }
+
+    function renderCustomerMenu() {
+      const query = (document.getElementById('custSearchInput').value || '').toLowerCase();
+      const filtered = menuCatalog.filter(item => {
+        const matchCat = currentCustomerCategory === 'Semua' || item.category === currentCustomerCategory;
+        const matchQuery = item.name.toLowerCase().includes(query) || item.code.toLowerCase().includes(query);
+        return matchCat && matchQuery;
+      });
+
+      const grid = document.getElementById('customerMenuGrid');
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-arinna-surface border border-arinna-border rounded-2xl p-8 text-center text-xs text-slate-400">Menu tidak ditemukan. Coba kata kunci lain.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const inCart = customerCart.find(c => c.code === item.code);
+        const fallbackUrl = getFallbackDishSvg(item.name, item.category);
+        return `
+          <div class="bg-arinna-surface border border-arinna-border hover:border-arinna-gold/50 rounded-2xl overflow-hidden flex flex-col justify-between transition group ${!item.available ? 'opacity-60' : ''}">
+            <div>
+              <div class="relative h-40 bg-arinna-bg overflow-hidden">
+                <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.src='${fallbackUrl}';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                  <span class="px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-mono font-bold text-slate-200">${item.code}</span>
+                  ${item.popular ? `<span class="px-2 py-0.5 rounded-lg bg-arinna-gold text-arinna-bg text-[10px] font-extrabold"><i class="fa-solid fa-star text-[9px]"></i> Favorit</span>` : ''}
+                </div>
+                ${!item.available ? `<div class="absolute inset-0 bg-black/70 flex items-center justify-center"><span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-extrabold uppercase">Stok Habis</span></div>` : ''}
+              </div>
+              <div class="p-3.5">
+                <span class="text-[10px] font-semibold text-arinna-purple uppercase tracking-wider">${item.category}</span>
+                <h4 class="font-display font-bold text-sm text-white mt-0.5 line-clamp-1">${item.name}</h4>
+                <div class="font-display font-extrabold text-base text-arinna-gold mt-1.5">${formatRupiah(item.price)}</div>
+              </div>
+            </div>
+            <div class="px-3.5 pb-3.5">
+              ${!item.available
+                ? `<button disabled class="w-full py-2 rounded-xl bg-arinna-bg text-slate-500 text-xs font-bold cursor-not-allowed">Tidak Tersedia</button>`
+                : inCart
+                  ? `<div class="flex items-center justify-between bg-arinna-bg border border-arinna-gold/50 rounded-xl p-1">
+                      <button onclick="updateCustomerCartQty('${item.code}', -1)" class="w-8 h-8 rounded-lg bg-arinna-card hover:bg-rose-500/20 text-white font-bold">-</button>
+                      <span class="font-mono font-extrabold text-xs text-arinna-gold">${inCart.qty} Porsi</span>
+                      <button onclick="updateCustomerCartQty('${item.code}', 1)" class="w-8 h-8 rounded-lg bg-arinna-gold text-arinna-bg font-extrabold">+</button>
+                    </div>`
+                  : `<button onclick="addToCustomerCart('${item.code}')" class="w-full py-2.5 rounded-xl bg-arinna-card hover:bg-arinna-gold text-white hover:text-arinna-bg border border-arinna-border hover:border-arinna-gold text-xs font-bold transition flex items-center justify-center gap-1.5">
+                      <i class="fa-solid fa-plus"></i> Tambah Pesanan
+                    </button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addToCustomerCart(code) {
+      const item = menuCatalog.find(m => m.code === code);
+      if (!item || !item.available) return;
+      const existing = customerCart.find(c => c.code === code);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        customerCart.push({
+          code: item.code,
+          name: item.name,
+          category: item.category,
+          price: item.price,
+          qty: 1,
+          note: ''
+        });
+      }
+      renderCustomerMenu();
+      renderCustomerCart();
+    }
+
+    function updateCustomerCartQty(code, delta) {
+      const idx = customerCart.findIndex(c => c.code === code);
+      if (idx === -1) return;
+      customerCart[idx].qty += delta;
+      if (customerCart[idx].qty <= 0) {
+        customerCart.splice(idx, 1);
+      }
+      renderCustomerMenu();
+      renderCustomerCart();
+    }
+
+    function updateCustomerItemNote(code, noteVal) {
+      const item = customerCart.find(c => c.code === code);
+      if (item) item.note = noteVal;
+    }
+
+    function clearCustomerCart() {
+      customerCart = [];
+      renderCustomerMenu();
+      renderCustomerCart();
+    }
+
+    function renderCustomerCart() {
+      const list = document.getElementById('customerCartList');
+      if (customerCart.length === 0) {
+        list.innerHTML = `<div class="py-8 text-center text-xs text-slate-400 border border-dashed border-arinna-border rounded-xl">Keranjang masih kosong.<br/>Pilih menu di samping untuk memesan.</div>`;
+        document.getElementById('custCartSubtotal').textContent = 'Rp 0';
+        document.getElementById('custCartTax').textContent = 'Rp 0';
+        document.getElementById('custCartTotal').textContent = 'Rp 0';
+        return;
+      }
+
+      let subtotal = 0;
+      list.innerHTML = customerCart.map(item => {
+        const lineTotal = item.price * item.qty;
+        subtotal += lineTotal;
+        return `
+          <div class="bg-arinna-bg border border-arinna-border rounded-xl p-2.5 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs font-bold text-white">${item.name}</div>
+                <div class="text-[11px] font-mono text-arinna-gold">${formatRupiah(item.price)} x ${item.qty}</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="updateCustomerCartQty('${item.code}', -1)" class="w-6 h-6 rounded-lg bg-arinna-card text-white text-xs font-bold">-</button>
+                <span class="font-mono text-xs font-bold w-4 text-center">${item.qty}</span>
+                <button onclick="updateCustomerCartQty('${item.code}', 1)" class="w-6 h-6 rounded-lg bg-arinna-gold text-arinna-bg text-xs font-extrabold">+</button>
+              </div>
+            </div>
+            <input type="text" value="${item.note}" onchange="updateCustomerItemNote('${item.code}', this.value)" placeholder="Catatan item (misal: pedas sedang / es sedikit)..." class="w-full px-2.5 py-1.5 rounded-lg bg-arinna-surface border border-arinna-border text-[11px] text-slate-200 placeholder-slate-500 focus:border-arinna-gold focus:outline-none" />
+          </div>
+        `;
+      }).join('');
+
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + tax;
+      document.getElementById('custCartSubtotal').textContent = formatRupiah(subtotal);
+      document.getElementById('custCartTax').textContent = formatRupiah(tax);
+      document.getElementById('custCartTotal').textContent = formatRupiah(total);
+    }
+
+    function submitCustomerOrder() {
+      if (customerCart.length === 0) {
+        showToast('Pilih minimal 1 menu terlebih dahulu!', 'error');
+        return;
+      }
+
+      const orderType = document.getElementById('custOrderType').value;
+      const tableNum = orderType === 'Takeaway'
+        ? 'Takeaway'
+        : (document.getElementById('custTableNumber').value.trim() || 'Meja 01');
+      const paymentPref = document.getElementById('custPaymentPreference').value;
+
+      const subtotal = customerCart.reduce((acc, i) => acc + i.price * i.qty, 0);
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + tax;
+      document.getElementById('custCartSubtotal').textContent = formatRupiah(subtotal);
+      document.getElementById('custCartTax').textContent = formatRupiah(tax);
+      document.getElementById('custCartTotal').textContent = formatRupiah(total);
+      refreshCustomerDigitalInstruction();
+    }
+
+    function onCustomerDigitalMethodChange() {
+      const method = document.getElementById('custPaymentPreference').value;
+      const panel = document.getElementById('custDigitalPaymentPanel');
+      const subBox = document.getElementById('custDigitalSubchannelBox');
+      const subLabel = document.getElementById('custDigitalSubchannelLabel');
+      const subSelect = document.getElementById('custDigitalSubchannel');
+      const qrisBox = document.getElementById('custQrisVisualBox');
+
+      if (!method) {
+        panel.classList.add('hidden');
+        document.getElementById('custDigitalPaidConfirm').checked = false;
+        syncCustomerDigitalConfirmBadge();
+        return;
+      }
+
+      panel.classList.remove('hidden');
+      currentCustomerDigitalRef = 'DIG-ARN-' + Math.floor(100000 + Math.random() * 900000);
+
+      if (method === 'QRIS Arinna') {
+        subBox.classList.add('hidden');
+        qrisBox.classList.remove('hidden');
+      } else {
+        qrisBox.classList.add('hidden');
+        subBox.classList.remove('hidden');
+        subLabel.textContent = method === 'Transfer Bank' ? 'Pilih Rekening Bank Tujuan' : 'Pilih Akun E-Wallet Tujuan';
+        const options = DIGITAL_SUBCHANNELS[method] || [];
+        subSelect.innerHTML = options.map((opt, idx) => `<option value="${idx}">${opt.label}</option>`).join('');
+      }
+
+      syncCustomerDigitalConfirmBadge();
+      refreshCustomerDigitalInstruction();
+    }
+
+    function syncCustomerDigitalConfirmBadge() {
+      const checked = document.getElementById('custDigitalPaidConfirm').checked;
+      const badge = document.getElementById('custDigitalStatusBadge');
+      if (checked) {
+        badge.textContent = 'Terbayar Digital';
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else {
+        badge.textContent = 'Menunggu Konfirmasi';
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      }
+    }
+
+    function refreshCustomerDigitalInstruction() {
+      const method = document.getElementById('custPaymentPreference').value;
+      if (!method) return;
+      const subtotal = customerCart.reduce((acc, i) => acc + i.price * i.qty, 0);
+      const total = subtotal + Math.round(subtotal * 0.1);
+
+      document.getElementById('custDigitalAmountText').textContent = formatRupiah(total);
+      document.getElementById('custQrisNominalText').textContent = `Nominal Tepat: ${formatRupiah(total)}`;
+      document.getElementById('custDigitalRefCode').textContent = currentCustomerDigitalRef || 'DIG-ARN-000000';
+
+      const targetLabel = document.getElementById('custDigitalTargetLabel');
+      const targetValue = document.getElementById('custDigitalTargetValue');
+
+      if (method === 'QRIS Arinna') {
+        targetLabel.textContent = 'NMID / Kode QRIS:';
+        targetValue.textContent = 'ID1026339812099 • ARINNA RESTO';
+      } else {
+        const idx = Number(document.getElementById('custDigitalSubchannel').value) || 0;
+        const chosen = (DIGITAL_SUBCHANNELS[method] || [])[idx];
+        targetLabel.textContent = method === 'Transfer Bank' ? 'No. Rekening:' : 'Nomor E-Wallet:';
+        targetValue.textContent = chosen ? chosen.code : '-';
+      }
+    }
+
+    function submitCustomerOrder() {
+      if (customerCart.length === 0) {
+        showToast('Pilih minimal 1 menu terlebih dahulu!', 'error');
+        return;
+      }
+
+      const paymentMethod = document.getElementById('custPaymentPreference').value;
+      if (!paymentMethod) {
+        showToast('Pesanan online wajib memilih metode pembayaran digital (QRIS Arinna, Transfer Bank, atau E-Wallet)!', 'error');
+        return;
+      }
+
+      const isConfirmedPaid = document.getElementById('custDigitalPaidConfirm').checked;
+      if (!isConfirmedPaid) {
+        showToast('Centang konfirmasi pembayaran digital terlebih dahulu sebelum mengirim pesanan!', 'error');
+        return;
+      }
+
+      const orderType = document.getElementById('custOrderType').value;
+      const tableNum = orderType === 'Takeaway'
+        ? 'Takeaway'
+        : (document.getElementById('custTableNumber').value.trim() || 'Meja 01');
+
+      let paymentDetail = paymentMethod;
+      if (paymentMethod !== 'QRIS Arinna') {
+        const idx = Number(document.getElementById('custDigitalSubchannel').value) || 0;
+        const chosen = (DIGITAL_SUBCHANNELS[paymentMethod] || [])[idx];
+        if (chosen) {
+          paymentDetail = `${paymentMethod} (${chosen.code})`;
+        }
+      }
+
+      const subtotal = customerCart.reduce((acc, i) => acc + i.price * i.qty, 0);
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + tax;
+      const queueNumber = allocateNextQueueNumber();
+      const paymentRef = currentCustomerDigitalRef || ('DIG-ARN-' + Math.floor(100000 + Math.random() * 900000));
+
+      const newOrder = {
+        id: 'ORD-' + Date.now().toString().slice(-6),
+        queueNumber,
+        customerName: currentSession.name,
+        customerPhone: currentSession.phone,
+        orderType,
+        tableNumber: tableNum,
+        paymentChannel: 'Digital',
+        paymentPreference: paymentDetail,
+        paymentRef,
+        paymentStatus: 'Terbayar Digital',
+        items: JSON.parse(JSON.stringify(customerCart)),
+        subtotal,
+        tax,
+        total,
+        status: 'Menunggu Diproses',
+        createdAt: new Date().toISOString()
+      };
+
+      const orders = getOnlineOrders();
+      orders.unshift(newOrder);
+      saveOnlineOrders(orders);
+      latestSubmittedCustomerOrder = newOrder;
+
+      customerCart = [];
+      document.getElementById('custPaymentPreference').value = '';
+      document.getElementById('custDigitalPaidConfirm').checked = false;
+      currentCustomerDigitalRef = '';
+      onCustomerDigitalMethodChange();
+
+      renderCustomerMenu();
+      renderCustomerCart();
+      renderCustomerTickets();
+
+      document.getElementById('modalQueueNumber').textContent = queueNumber;
+      document.getElementById('modalQueueMeta').textContent = `${orderType} • ${tableNum} • ${paymentDetail} (${paymentRef}) • ${formatRupiah(total)}`;
+
+      const pendingAhead = orders.filter(o => o.status !== 'Selesai' && o.id !== newOrder.id).length;
+      document.getElementById('modalQueueEstimate').textContent =
+        pendingAhead > 0
+          ? `Pembayaran Digital Terkonfirmasi • Antrian di depan Anda: ${pendingAhead} pesanan (Estimasi ± ${(pendingAhead + 1) * 7} menit)`
+          : 'Pembayaran Digital Terkonfirmasi • Pesanan Anda urutan terdepan! Estimasi ± 10 menit';
+
+      document.getElementById('modalQueueItemsSummary').innerHTML = newOrder.items.map(i => `
+        <div class="flex justify-between text-slate-200">
+          <span>${i.name} <strong class="text-arinna-gold">x${i.qty}</strong>${i.note ? ` <em class="text-slate-400">(${i.note})</em>` : ''}</span>
+          <span class="font-mono">${formatRupiah(i.price * i.qty)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('queueTicketModal').classList.remove('hidden');
+      showToast(`Pesanan digital terkirim! Nomor Antrian Anda: ${queueNumber}`, 'success');
+    }
+
+    function closeQueueModal() {
+      document.getElementById('queueTicketModal').classList.add('hidden');
+    }
+
+    function printLatestCustomerTicket() {
+      if (!latestSubmittedCustomerOrder) return;
+      closeQueueModal();
+      openCustomerTicketReceipt(latestSubmittedCustomerOrder.id);
+      setTimeout(() => {
+        window.print();
+      }, 250);
+    }
+
+    function renderCustomerTickets() {
+      const allOrders = getOnlineOrders();
+      const myOrders = allOrders.filter(o => o.customerPhone === currentSession.phone || o.customerName === currentSession.name);
+
+      const activeCount = myOrders.filter(o => o.status !== 'Selesai').length;
+      document.getElementById('custActiveOrderBadge').textContent = activeCount;
+
+      const grid = document.getElementById('customerTicketsGrid');
+      if (myOrders.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-arinna-surface border border-arinna-border rounded-2xl p-8 text-center text-xs text-slate-400">Anda belum memiliki riwayat pesanan online hari ini.</div>`;
+        return;
+      }
+
+      const statusStyles = {
+        'Menunggu Diproses': 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        'Sedang Disiapkan Dapur': 'bg-purple-500/20 text-purple-200 border-purple-500/40',
+        'Siap Diambil / Diantar': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        'Selesai': 'bg-slate-700/40 text-slate-300 border-slate-600/40'
+      };
+
+      grid.innerHTML = myOrders.map(ord => `
+        <div class="bg-arinna-surface border border-arinna-border rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-slate-400">${ord.id} • ${formatDateTime(ord.createdAt)}</span>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="px-2.5 py-0.5 rounded-lg bg-arinna-gold text-arinna-bg font-mono font-extrabold text-sm">${ord.queueNumber}</span>
+                <span class="text-xs font-bold text-white">${ord.orderType} (${ord.tableNumber})</span>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full border text-[10px] font-bold ${statusStyles[ord.status] || statusStyles['Menunggu Diproses']}">${ord.status}</span>
+          </div>
+
+          <div class="bg-arinna-bg border border-arinna-border rounded-xl p-3 space-y-1 text-xs">
+            ${ord.items.map(i => `
+              <div class="flex justify-between text-slate-200">
+                <span>${i.name} x${i.qty}${i.note ? ` <em class="text-slate-400">(${i.note})</em>` : ''}</span>
+                <span class="font-mono">${formatRupiah(i.price * i.qty)}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <span class="text-[10px] text-slate-400 block">${ord.paymentPreference || 'Pembayaran Digital'} • <span class="text-emerald-400 font-semibold">${ord.paymentStatus || 'Terbayar Digital'}</span></span>
+              <span class="text-[10px] font-mono text-slate-400 block">Ref: ${ord.paymentRef || '-'}</span>
+              <span class="font-display font-extrabold text-base text-arinna-gold">${formatRupiah(ord.total)}</span>
+            </div>
+            <button onclick="openCustomerTicketReceipt('${ord.id}')" class="px-3.5 py-2 rounded-xl bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg text-xs font-extrabold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-print"></i> Lihat &amp; Cetak Tiket
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- STAFF POS WORKSPACE LOGIC ---
+    function switchStaffTab(tab) {
+      const tabs = ['pos', 'online', 'menu', 'report'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`staffTab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+        const sec = document.getElementById(`staff${t.charAt(0).toUpperCase() + t.slice(1)}Section`);
+        if (t === tab) {
+          btn.className = 'px-3.5 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm bg-arinna-purple text-white transition flex items-center gap-2';
+          sec.classList.remove('hidden');
+        } else {
+          btn.className = 'px-3.5 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-arinna-card transition flex items-center gap-2';
+          sec.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'online') renderStaffOnlineOrders();
+      if (tab === 'menu') renderManageMenu();
+      if (tab === 'report') renderReportsAndHistory();
+    }
+
+    function renderPosCategories() {
+      const categories = ['Semua', 'Makanan Berat', 'Camilan', 'Minuman'];
+      const bar = document.getElementById('posCategoryBar');
+      bar.innerHTML = categories.map(cat => {
+        const active = currentPosCategory === cat;
+        return `<button onclick="setPosCategory('${cat}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${active ? 'bg-arinna-purple text-white' : 'bg-arinna-bg text-slate-300 border border-arinna-border hover:text-white'}">${cat}</button>`;
+      }).join('');
+    }
+
+    function setPosCategory(cat) {
+      currentPosCategory = cat;
+      renderPosCategories();
+      renderPosMenu();
+    }
+
+    function renderPosMenu() {
+      const query = (document.getElementById('posSearchInput').value || '').toLowerCase();
+      const filtered = menuCatalog.filter(item => {
+        const matchCat = currentPosCategory === 'Semua' || item.category === currentPosCategory;
+        const matchQuery = item.name.toLowerCase().includes(query) || item.code.toLowerCase().includes(query);
+        return matchCat && matchQuery;
+      });
+
+      const grid = document.getElementById('posMenuGrid');
+      grid.innerHTML = filtered.map(item => {
+        const fallbackUrl = getFallbackDishSvg(item.name, item.category);
+        return `
+          <div onclick="${item.available ? `addToPosCart('${item.code}')` : ''}" class="bg-arinna-surface border border-arinna-border ${item.available ? 'hover:border-arinna-purple cursor-pointer' : 'opacity-55 cursor-not-allowed'} rounded-2xl overflow-hidden flex flex-col justify-between transition group">
+            <div class="relative h-28 bg-arinna-bg overflow-hidden">
+              <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.src='${fallbackUrl}';" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+              <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/75 font-mono text-[10px] font-bold text-white">${item.code}</span>
+              ${!item.available ? `<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-rose-600 text-[10px] font-bold text-white">Habis</span>` : ''}
+            </div>
+            <div class="p-3">
+              <div class="text-xs font-bold text-white line-clamp-1">${item.name}</div>
+              <div class="flex items-center justify-between mt-1.5">
+                <span class="font-display font-extrabold text-xs sm:text-sm text-arinna-gold">${formatRupiah(item.price)}</span>
+                <span class="w-6 h-6 rounded-lg bg-arinna-purple/25 group-hover:bg-arinna-purple text-purple-200 group-hover:text-white flex items-center justify-center text-xs transition"><i class="fa-solid fa-plus"></i></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addToPosCart(code) {
+      const item = menuCatalog.find(m => m.code === code);
+      if (!item || !item.available) return;
+      const existing = posCart.find(c => c.code === code);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        posCart.push({
+          code: item.code,
+          name: item.name,
+          category: item.category,
+          price: item.price,
+          qty: 1,
+          note: ''
+        });
+      }
+      renderPosCart();
+    }
+
+    function updatePosCartQty(code, delta) {
+      const idx = posCart.findIndex(c => c.code === code);
+      if (idx === -1) return;
+      posCart[idx].qty += delta;
+      if (posCart[idx].qty <= 0) {
+        posCart.splice(idx, 1);
+      }
+      renderPosCart();
+    }
+
+    function updatePosItemNote(code, val) {
+      const item = posCart.find(c => c.code === code);
+      if (item) item.note = val;
+    }
+
+    function resetPosCart() {
+      posCart = [];
+      activeLinkedOnlineOrderId = null;
+      document.getElementById('posLinkedOrderBanner').classList.add('hidden');
+      document.getElementById('posCustomerName').value = 'Pelanggan Umum';
+      document.getElementById('posOrderType').value = 'Dine-In • Meja 01';
+      document.getElementById('posDiscountInput').value = '0';
+      document.getElementById('posCashReceived').value = '0';
+      renderPosCart();
+    }
+
+    function selectPosPaymentMethod(method) {
+      posPaymentMethod = method === 'Digital (QRIS)' ? 'Digital (QRIS)' : 'Tunai';
+
+      const btnTunai = document.getElementById('payMethodTunai');
+      const btnQris = document.getElementById('payMethodQRIS');
+      const cashPanel = document.getElementById('posCashPaymentPanel');
+      const qrisPanel = document.getElementById('posQrisPaymentPanel');
+
+      if (posPaymentMethod === 'Tunai') {
+        btnTunai.className = 'py-2 rounded-lg text-xs font-bold bg-arinna-purple text-white border border-arinna-purple flex items-center justify-center gap-1.5';
+        btnQris.className = 'py-2 rounded-lg text-xs font-bold bg-arinna-bg text-slate-300 border border-arinna-border hover:text-white flex items-center justify-center gap-1.5';
+        cashPanel.classList.remove('hidden');
+        qrisPanel.classList.add('hidden');
+        calculatePosChange();
+      } else {
+        btnQris.className = 'py-2 rounded-lg text-xs font-bold bg-arinna-gold text-arinna-bg border border-arinna-gold flex items-center justify-center gap-1.5';
+        btnTunai.className = 'py-2 rounded-lg text-xs font-bold bg-arinna-bg text-slate-300 border border-arinna-border hover:text-white flex items-center justify-center gap-1.5';
+        cashPanel.classList.add('hidden');
+        qrisPanel.classList.remove('hidden');
+        generatePosQrisRef(false);
+        setExactCash();
+      }
+    }
+
+    function generatePosQrisRef(notify = false) {
+      const input = document.getElementById('posQrisRefInput');
+      if (!input) return;
+      input.value = 'QRIS-ARN-' + Math.floor(100000 + Math.random() * 900000);
+      if (notify) {
+        showToast('Kode referensi QRIS baru dibuat.', 'info');
+      }
+    }
+
+    function getPosTotals() {
+      const subtotal = posCart.reduce((sum, i) => sum + i.price * i.qty, 0);
+      const rawDiscount = Math.max(0, Number(document.getElementById('posDiscountInput').value) || 0);
+      const discount = Math.min(subtotal, rawDiscount);
+      const afterDiscount = subtotal - discount;
+      const taxRate = Number(document.getElementById('posTaxRate').value) || 0;
+      const tax = Math.round(afterDiscount * (taxRate / 100));
+      const grandTotal = afterDiscount + tax;
+      return { subtotal, discount, tax, grandTotal };
+    }
+
+    function setExactCash() {
+      const { grandTotal } = getPosTotals();
+      document.getElementById('posCashReceived').value = grandTotal;
+      calculatePosChange();
+    }
+
+    function setQuickCash(amount) {
+      document.getElementById('posCashReceived').value = amount;
+      calculatePosChange();
+    }
+
+    function calculatePosChange() {
+      const { grandTotal } = getPosTotals();
+      const qrisDueEl = document.getElementById('posQrisDueAmount');
+      if (qrisDueEl) qrisDueEl.textContent = formatRupiah(grandTotal);
+
+      const el = document.getElementById('posChangeText');
+      if (posPaymentMethod !== 'Tunai') {
+        document.getElementById('posCashReceived').value = grandTotal;
+        el.textContent = formatRupiah(0);
+        el.className = 'font-mono font-bold text-sm text-emerald-400';
+        return;
+      }
+
+      const paid = Number(document.getElementById('posCashReceived').value) || 0;
+      const change = paid - grandTotal;
+      if (paid === 0 && grandTotal > 0) {
+        el.textContent = 'Rp 0';
+        el.className = 'font-mono font-bold text-sm text-slate-400';
+      } else if (change < 0) {
+        el.textContent = `Kurang ${formatRupiah(Math.abs(change))}`;
+        el.className = 'font-mono font-bold text-sm text-rose-400';
+      } else {
+        el.textContent = formatRupiah(change);
+        el.className = 'font-mono font-bold text-sm text-emerald-400';
+      }
+    }
+
+    function renderPosCart() {
+      const list = document.getElementById('posCartList');
+      if (posCart.length === 0) {
+        list.innerHTML = `<div class="py-6 text-center text-xs text-slate-400 border border-dashed border-arinna-border rounded-xl">Klik menu di sebelah kiri untuk menambahkan ke transaksi.</div>`;
+      } else {
+        list.innerHTML = posCart.map(item => `
+          <div class="bg-arinna-bg border border-arinna-border rounded-xl p-2.5 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-bold text-white truncate">${item.name}</div>
+                <div class="text-[11px] font-mono text-arinna-gold">${formatRupiah(item.price)} x ${item.qty}</div>
+              </div>
+              <div class="flex items-center gap-1">
+                <button onclick="updatePosCartQty('${item.code}', -1)" class="w-6 h-6 rounded-lg bg-arinna-card text-white text-xs font-bold">-</button>
+                <span class="font-mono text-xs font-bold w-5 text-center">${item.qty}</span>
+                <button onclick="updatePosCartQty('${item.code}', 1)" class="w-6 h-6 rounded-lg bg-arinna-purple text-white text-xs font-bold">+</button>
+              </div>
+            </div>
+            <input type="text" value="${item.note || ''}" onchange="updatePosItemNote('${item.code}', this.value)" placeholder="Catatan dapur..." class="w-full px-2 py-1 rounded-lg bg-arinna-surface border border-arinna-border text-[10px] text-slate-200 placeholder-slate-500 focus:outline-none" />
+          </div>
+        `).join('');
+      }
+      renderPosCartTotals();
+    }
+
+    function renderPosCartTotals() {
+      const { subtotal, discount, tax, grandTotal } = getPosTotals();
+      document.getElementById('posSubtotalText').textContent = formatRupiah(subtotal);
+      document.getElementById('posDiscountText').textContent = '- ' + formatRupiah(discount);
+      document.getElementById('posTaxText').textContent = formatRupiah(tax);
+      document.getElementById('posGrandTotalText').textContent = formatRupiah(grandTotal);
+      calculatePosChange();
+    }
+
+    function processPosCheckout() {
+      if (posCart.length === 0) {
+        showToast('Keranjang kasir masih kosong!', 'error');
+        return;
+      }
+
+      const { subtotal, discount, tax, grandTotal } = getPosTotals();
+      let paid = Number(document.getElementById('posCashReceived').value) || 0;
+      let qrisRef = '';
+
+      if (posPaymentMethod !== 'Tunai') {
+        const verified = document.getElementById('posQrisVerifiedCheck').checked;
+        if (!verified) {
+          showToast('Centang verifikasi pembayaran Digital (QRIS) terlebih dahulu!', 'error');
+          return;
+        }
+        paid = grandTotal;
+        qrisRef = (document.getElementById('posQrisRefInput').value || '').trim() || ('QRIS-ARN-' + Math.floor(100000 + Math.random() * 900000));
+      }
+
+      if (paid < grandTotal) {
+        showToast('Nominal pembayaran tunai kurang dari Grand Total!', 'error');
+        return;
+      }
+
+      const change = posPaymentMethod === 'Tunai' ? (paid - grandTotal) : 0;
+      const customerName = document.getElementById('posCustomerName').value.trim() || 'Pelanggan Umum';
+      const orderType = document.getElementById('posOrderType').value.trim() || 'Dine-In';
+
+      let queueNumber = '';
+      if (activeLinkedOnlineOrderId) {
+        const orders = getOnlineOrders();
+        const linked = orders.find(o => o.id === activeLinkedOnlineOrderId);
+        if (linked) {
+          queueNumber = linked.queueNumber;
+          linked.status = 'Selesai';
+          saveOnlineOrders(orders);
+        }
+      }
+      if (!queueNumber) {
+        queueNumber = allocateNextQueueNumber();
+      }
+
+      const trx = {
+        id: 'TRX-' + Date.now().toString().slice(-6),
+        queueNumber,
+        createdAt: new Date().toISOString(),
+        cashierName: currentSession.name,
+        customerName,
+        orderType,
+        paymentMethod: posPaymentMethod,
+        paymentRef: qrisRef,
+        items: JSON.parse(JSON.stringify(posCart)),
+        subtotal,
+        discount,
+        tax,
+        grandTotal,
+        paid,
+        change
+      };
+
+      const allTrx = getTransactions();
+      allTrx.unshift(trx);
+      saveTransactions(allTrx);
+
+      openReceiptModal(trx);
+      resetPosCart();
+      selectPosPaymentMethod('Tunai');
+      renderStaffOnlineOrders();
+      renderReportsAndHistory();
+      showToast(`Transaksi ${trx.id} (${trx.paymentMethod}) berhasil! Struk siap dicetak.`, 'success');
+    }
+
+    // --- STAFF ONLINE ORDERS & KITCHEN QUEUE ---
+    function renderStaffOnlineOrders() {
+      const orders = getOnlineOrders();
+      const activeCount = orders.filter(o => o.status !== 'Selesai').length;
+      document.getElementById('staffOnlineBadge').textContent = activeCount;
+
+      const grid = document.getElementById('staffOnlineOrdersGrid');
+      if (orders.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-arinna-surface border border-arinna-border rounded-2xl p-8 text-center text-xs text-slate-400">Belum ada pesanan masuk dari pelanggan online.</div>`;
+        return;
+      }
+
+      grid.innerHTML = orders.map(ord => {
+        const isDone = ord.status === 'Selesai';
+        return `
+          <div class="bg-arinna-surface border ${isDone ? 'border-arinna-border opacity-70' : 'border-arinna-gold/50'} rounded-2xl p-4 flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="px-2.5 py-0.5 rounded-lg bg-arinna-gold text-arinna-bg font-mono font-extrabold text-sm">${ord.queueNumber}</span>
+                  <h4 class="font-display font-bold text-sm text-white mt-1.5">${ord.customerName}</h4>
+                  <p class="text-[11px] text-slate-400">${ord.orderType} • ${ord.tableNumber} • ${ord.customerPhone}</p>
+                </div>
+                <span class="px-2 py-1 rounded-lg bg-arinna-bg border border-arinna-border text-[10px] font-bold text-arinna-gold">${ord.status}</span>
+              </div>
+
+              <div class="bg-arinna-bg border border-arinna-border rounded-xl p-2.5 space-y-1 text-xs">
+                ${ord.items.map(i => `
+                  <div class="flex justify-between text-slate-200">
+                    <span>${i.name} x${i.qty}${i.note ? ` <em class="text-amber-300">(${i.note})</em>` : ''}</span>
+                    <span class="font-mono">${formatRupiah(i.price * i.qty)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-1 border-t border-arinna-border">
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-slate-400">${ord.paymentPreference || 'Pembayaran Digital'} <span class="text-emerald-400 font-semibold">(${ord.paymentStatus || 'Terbayar Digital'})</span></span>
+                <span class="font-display font-extrabold text-sm text-arinna-gold">${formatRupiah(ord.total)}</span>
+              </div>
+              <div class="text-[10px] font-mono text-slate-400">Ref Digital: ${ord.paymentRef || '-'}</div>
+              <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                <button onclick="updateOnlineOrderStatus('${ord.id}', 'Sedang Disiapkan Dapur')" class="py-1.5 px-2 rounded-lg bg-purple-600/25 hover:bg-purple-600 text-purple-200 hover:text-white font-bold transition">Terima &amp; Masak</button>
+                <button onclick="updateOnlineOrderStatus('${ord.id}', 'Siap Diambil / Diantar')" class="py-1.5 px-2 rounded-lg bg-emerald-600/25 hover:bg-emerald-600 text-emerald-200 hover:text-white font-bold transition">Siap Saji</button>
+                <button onclick="loadOnlineOrderToPos('${ord.id}')" class="col-span-2 py-2 px-2 rounded-lg bg-arinna-gold hover:bg-arinna-goldLight text-arinna-bg font-extrabold transition flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-cash-register"></i> Proses Bayar &amp; Cetak Struk di POS
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateOnlineOrderStatus(orderId, newStatus) {
+      const orders = getOnlineOrders();
+      const target = orders.find(o => o.id === orderId);
+      if (!target) return;
+      target.status = newStatus;
+      saveOnlineOrders(orders);
+      if (newStatus === 'Siap Diambil / Diantar') {
+        setNowServingNumber(target.queueNumber);
+      }
+      renderStaffOnlineOrders();
+      showToast(`Status antrian ${target.queueNumber}: ${newStatus}`, 'success');
+    }
+
+    function loadOnlineOrderToPos(orderId) {
+      const orders = getOnlineOrders();
+      const target = orders.find(o => o.id === orderId);
+      if (!target) return;
+
+      activeLinkedOnlineOrderId = target.id;
+      posCart = JSON.parse(JSON.stringify(target.items));
+      document.getElementById('posCustomerName').value = target.customerName;
+      document.getElementById('posOrderType').value = `${target.orderType} • ${target.tableNumber}`;
+      document.getElementById('posTaxRate').value = '10';
+      const banner = document.getElementById('posLinkedOrderBanner');
+      banner.textContent = `Terhubung Antrian Online: ${target.queueNumber}`;
+      banner.classList.remove('hidden');
+
+      switchStaffTab('pos');
+      renderPosCart();
+      setExactCash();
+      showToast(`Pesanan ${target.queueNumber} dimuat ke layar Kasir POS.`, 'info');
+    }
+
+    // --- STAFF MANAGE MENU ---
+    function handleAddNewMenu(e) {
+      e.preventDefault();
+      const code = document.getElementById('newMenuCode').value.trim().toUpperCase();
+      const category = document.getElementById('newMenuCategory').value;
+      const name = document.getElementById('newMenuName').value.trim();
+      const price = Number(document.getElementById('newMenuPrice').value);
+      const imageInput = document.getElementById('newMenuImage').value.trim();
+      const popular = document.getElementById('newMenuPopular').checked;
+
+      if (!code || !name || price <= 0) return;
+      if (menuCatalog.some(m => m.code === code)) {
+        showToast(`Kode menu ${code} sudah terdaftar!`, 'error');
+        return;
+      }
+
+      const newItem = {
+        code,
+        name,
+        category,
+        price,
+        popular,
+        available: true,
+        image: imageInput || getFallbackDishSvg(name, category)
+      };
+
+      menuCatalog.unshift(newItem);
+      saveMenuCatalog(menuCatalog);
+
+      e.target.reset();
+      renderManageMenu();
+      renderPosMenu();
+      showToast(`Menu "${name}" berhasil ditambahkan!`, 'success');
+    }
+
+    function toggleMenuAvailability(code) {
+      const item = menuCatalog.find(m => m.code === code);
+      if (!item) return;
+      item.available = !item.available;
+      saveMenuCatalog(menuCatalog);
+      renderManageMenu();
+      renderPosMenu();
+      showToast(`Status stok ${item.name}: ${item.available ? 'Tersedia' : 'Habis'}`, 'info');
+    }
+
+    function deleteMenuItem(code) {
+      menuCatalog = menuCatalog.filter(m => m.code !== code);
+      saveMenuCatalog(menuCatalog);
+      renderManageMenu();
+      renderPosMenu();
+      showToast(`Menu ${code} dihapus dari katalog.`, 'info');
+    }
+
+    function resetDefaultCatalog() {
+      saveMenuCatalog(JSON.parse(JSON.stringify(DEFAULT_MENU)));
+      renderManageMenu();
+      renderPosMenu();
+      showToast('Katalog menu bawaan Arinna Resto dipulihkan.', 'success');
+    }
+
+    function renderManageMenu() {
+      document.getElementById('manageMenuCount').textContent = menuCatalog.length;
+      const grid = document.getElementById('manageMenuGrid');
+      grid.innerHTML = menuCatalog.map(item => {
+        const fallbackUrl = getFallbackDishSvg(item.name, item.category);
+        return `
+          <div class="bg-arinna-bg border border-arinna-border rounded-xl p-3 flex items-center gap-3">
+            <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.src='${fallbackUrl}';" class="w-16 h-16 rounded-xl object-cover shrink-0" />
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-mono font-bold text-arinna-purple">${item.code}</span>
+                <span class="text-[10px] text-slate-400">• ${item.category}</span>
+              </div>
+              <div class="text-xs font-bold text-white truncate">${item.name}</div>
+              <div class="text-xs font-mono font-extrabold text-arinna-gold mt-0.5">${formatRupiah(item.price)}</div>
+              <div class="flex items-center gap-2 mt-2">
+                <button onclick="toggleMenuAvailability('${item.code}')" class="px-2 py-1 rounded-lg text-[10px] font-bold ${item.available ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+                  ${item.available ? 'Tersedia' : 'Habis'}
+                </button>
+                <button onclick="deleteMenuItem('${item.code}')" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white text-[10px] font-bold transition">
+                  Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- REPORTS & RECEIPT HISTORY ---
+    function showAllDatesReport() {
+      document.getElementById('reportDateFilter').value = '';
+      renderReportsAndHistory();
+    }
+
+    function renderReportsAndHistory() {
+      const filterDate = document.getElementById('reportDateFilter').value;
+      const allTrx = getTransactions();
+      const filtered = filterDate
+        ? allTrx.filter(t => t.createdAt.startsWith(filterDate))
+        : allTrx;
+
+      const totalRevenue = filtered.reduce((s, t) => s + t.grandTotal, 0);
+      const totalTrx = filtered.length;
+      const totalItems = filtered.reduce((s, t) => s + t.items.reduce((a, i) => a + i.qty, 0), 0);
+      const avgTrx = totalTrx > 0 ? Math.round(totalRevenue / totalTrx) : 0;
+
+      const cashTrxList = filtered.filter(t => t.paymentMethod === 'Tunai');
+      const digitalTrxList = filtered.filter(t => t.paymentMethod !== 'Tunai');
+      const cashRevenue = cashTrxList.reduce((s, t) => s + t.grandTotal, 0);
+      const digitalRevenue = digitalTrxList.reduce((s, t) => s + t.grandTotal, 0);
+
+      document.getElementById('kpiTotalRevenue').textContent = formatRupiah(totalRevenue);
+      document.getElementById('kpiCashRevenue').textContent = formatRupiah(cashRevenue);
+      document.getElementById('kpiDigitalRevenue').textContent = formatRupiah(digitalRevenue);
+      document.getElementById('kpiTotalTrx').textContent = totalTrx;
+      document.getElementById('kpiCashCount').textContent = cashTrxList.length;
+      document.getElementById('kpiDigitalCount').textContent = digitalTrxList.length;
+      document.getElementById('kpiTotalItems').textContent = totalItems;
+      document.getElementById('kpiAvgTrx').textContent = formatRupiah(avgTrx);
+
+      // Category breakdown bars
+      const catTotals = { 'Makanan Berat': 0, 'Camilan': 0, 'Minuman': 0 };
+      filtered.forEach(t => {
+        t.items.forEach(i => {
+          const cat = i.category || 'Makanan Berat';
+          catTotals[cat] = (catTotals[cat] || 0) + i.price * i.qty;
+        });
+      });
+      const maxCatVal = Math.max(1, ...Object.values(catTotals));
+      document.getElementById('categorySalesBars').innerHTML = Object.entries(catTotals).map(([cat, val]) => {
+        const pct = Math.round((val / maxCatVal) * 100);
+        return `
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-semibold text-slate-300">${cat}</span>
+              <span class="font-mono font-bold text-arinna-gold">${formatRupiah(val)}</span>
+            </div>
+            <div class="w-full h-2.5 bg-arinna-bg rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-arinna-purple to-arinna-gold rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // History table
+      const tbody = document.getElementById('transactionHistoryBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Belum ada transaksi pada periode ini.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(trx => `
+        <tr class="hover:bg-arinna-bg/60 transition">
+          <td class="py-3 px-4 font-mono font-bold text-white">${trx.id}</td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-arinna-gold/20 text-arinna-gold font-mono font-bold">${trx.queueNumber}</span></td>
+          <td class="py-3 px-4 text-slate-400">${formatDateTime(trx.createdAt)}</td>
+          <td class="py-3 px-4">${trx.customerName}</td>
+          <td class="py-3 px-4">
+            <span class="font-semibold ${trx.paymentMethod === 'Tunai' ? 'text-emerald-300' : 'text-purple-300'}">${trx.paymentMethod}</span>
+            ${trx.paymentRef ? `<span class="block text-[10px] font-mono text-slate-400">${trx.paymentRef}</span>` : ''}
+          </td>
+          <td class="py-3 px-4 text-right font-mono font-bold text-arinna-gold">${formatRupiah(trx.grandTotal)}</td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="reprintReceipt('${trx.id}')" class="px-3 py-1.5 rounded-lg bg-arinna-purple/25 hover:bg-arinna-gold text-purple-200 hover:text-arinna-bg font-bold transition inline-flex items-center gap-1.5">
+              <i class="fa-solid fa-print"></i> Cetak Struk
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function exportTransactionsCSV() {
+      const trxList = getTransactions();
+      if (trxList.length === 0) {
+        showToast('Belum ada data transaksi untuk diekspor.', 'error');
+        return;
+      }
+      const headers = ['No_Struk', 'Antrian', 'Waktu', 'Kasir', 'Pelanggan', 'Tipe_Order', 'Metode', 'Subtotal', 'Diskon', 'Pajak', 'Grand_Total'];
+      const rows = trxList.map(t => [
+        t.id,
+        t.queueNumber,
+        `"${formatDateTime(t.createdAt)}"`,
+        `"${t.cashierName}"`,
+        `"${t.customerName}"`,
+        `"${t.orderType}"`,
+        t.paymentMethod,
+        t.subtotal,
+        t.discount || 0,
+        t.tax,
+        t.grandTotal
+      ].join(','));
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csvContent));
+      link.setAttribute('download', `Laporan_Arinna_Resto_${getTodayDateString()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('File CSV laporan berhasil diunduh.', 'success');
+    }
+
+    // --- RECEIPT & TICKET MODAL ENGINE ---
+    function reprintReceipt(trxId) {
+      const trx = getTransactions().find(t => t.id === trxId);
+      if (trx) openReceiptModal(trx);
+    }
+
+    function openCustomerTicketReceipt(orderId) {
+      const ord = getOnlineOrders().find(o => o.id === orderId);
+      if (!ord) return;
+
+      document.getElementById('receiptModalTitle').textContent = 'Bukti Pesanan & Tiket Antrian';
+      document.getElementById('btnPrintReceiptAction').innerHTML = '<i class="fa-solid fa-print"></i> Cetak / Simpan Tiket';
+      document.getElementById('rcpDocTypeLabel').textContent = 'TIKET ANTRIAN & BUKTI PESANAN';
+      document.getElementById('rcpQueue').textContent = ord.queueNumber;
+      document.getElementById('rcpId').textContent = ord.id;
+      document.getElementById('rcpTime').textContent = formatDateTime(ord.createdAt);
+      document.getElementById('rcpCashierLabel').textContent = 'Status:';
+      document.getElementById('rcpCashier').textContent = ord.status;
+      document.getElementById('rcpCustomer').textContent = `${ord.customerName} (${ord.orderType} - ${ord.tableNumber})`;
+
+      document.getElementById('rcpItemsList').innerHTML = `
+        <div class="pb-1.5 mb-1.5 border-b border-dotted border-slate-400 text-[10px]">
+          <div>Bayar: <strong>${ord.paymentPreference || 'Pembayaran Digital'}</strong> (${ord.paymentStatus || 'Terbayar Digital'})</div>
+          <div>Ref: <strong>${ord.paymentRef || '-'}</strong></div>
+        </div>
+      ` + ord.items.map(i => `
+        <div>
+          <div class="font-bold">${i.name}${i.note ? ` (${i.note})` : ''}</div>
+          <div class="flex justify-between text-slate-800">
+            <span>${i.qty} x ${formatRupiah(i.price)}</span>
+            <span>${formatRupiah(i.qty * i.price)}</span>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('rcpSubtotal').textContent = formatRupiah(ord.subtotal);
+      document.getElementById('rcpDiscountRow').classList.add('hidden');
+      document.getElementById('rcpTax').textContent = formatRupiah(ord.tax);
+      document.getElementById('rcpTotalLabel').textContent = 'ESTIMASI TOTAL';
+      document.getElementById('rcpTotal').textContent = formatRupiah(ord.total);
+      document.getElementById('rcpPaymentRows').classList.add('hidden');
+      document.getElementById('rcpFooterNote').innerHTML =
+        'Tunjukkan nomor antrian ini ke kasir/pelayan.<br />Terima kasih — Arinna Cafe &amp; Resto Sumenep';
+
+      activeReceiptPlainText = buildPlainReceiptText({
+        title: 'TIKET ANTRIAN & BUKTI PESANAN',
+        queueNumber: ord.queueNumber,
+        refId: ord.id,
+        time: formatDateTime(ord.createdAt),
+        staffLabel: 'Status',
+        staffValue: ord.status,
+        customer: `${ord.customerName} (${ord.orderType} - ${ord.tableNumber})`,
+        items: ord.items,
+        subtotal: ord.subtotal,
+        discount: 0,
+        tax: ord.tax,
+        total: ord.total,
+        isPaid: false
+      });
+
+      document.getElementById('receiptModal').classList.remove('hidden');
+    }
+
+    function openReceiptModal(trx) {
+      document.getElementById('receiptModalTitle').textContent = 'Pratinjau Struk Pembayaran';
+      document.getElementById('btnPrintReceiptAction').innerHTML = '<i class="fa-solid fa-print"></i> Cetak Struk (Thermal)';
+      document.getElementById('rcpDocTypeLabel').textContent = 'STRUK PEMBAYARAN RESMI';
+      document.getElementById('rcpQueue').textContent = trx.queueNumber;
+      document.getElementById('rcpId').textContent = trx.id;
+      document.getElementById('rcpTime').textContent = formatDateTime(trx.createdAt);
+      document.getElementById('rcpCashierLabel').textContent = 'Kasir:';
+      document.getElementById('rcpCashier').textContent = trx.cashierName;
+      document.getElementById('rcpCustomer').textContent = `${trx.customerName} (${trx.orderType})`;
+
+      document.getElementById('rcpItemsList').innerHTML = `
+        <div class="pb-1.5 mb-1.5 border-b border-dotted border-slate-400 text-[10px]">
+          <div>Metode: <strong>${trx.paymentMethod}</strong>${trx.paymentRef ? ` | Ref: <strong>${trx.paymentRef}</strong>` : ''}</div>
+        </div>
+      ` + trx.items.map(i => `
+        <div>
+          <div class="font-bold">${i.name}${i.note ? ` (${i.note})` : ''}</div>
+          <div class="flex justify-between text-slate-800">
+            <span>${i.qty} x ${formatRupiah(i.price)}</span>
+            <span>${formatRupiah(i.qty * i.price)}</span>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('rcpSubtotal').textContent = formatRupiah(trx.subtotal);
+      if (trx.discount && trx.discount > 0) {
+        document.getElementById('rcpDiscountRow').classList.remove('hidden');
+        document.getElementById('rcpDiscount').textContent = '- ' + formatRupiah(trx.discount);
+      } else {
+        document.getElementById('rcpDiscountRow').classList.add('hidden');
+      }
+      document.getElementById('rcpTax').textContent = formatRupiah(trx.tax);
+      document.getElementById('rcpTotalLabel').textContent = 'TOTAL';
+      document.getElementById('rcpTotal').textContent = formatRupiah(trx.grandTotal);
+      document.getElementById('rcpPaymentRows').classList.remove('hidden');
+      document.getElementById('rcpMethod').textContent = trx.paymentMethod;
+      document.getElementById('rcpPaid').textContent = formatRupiah(trx.paid);
+      document.getElementById('rcpChange').textContent = formatRupiah(trx.change);
+      document.getElementById('rcpFooterNote').innerHTML =
+        'Terima kasih atas kunjungan Anda di<br />Arinna Cafe &amp; Resto Sumenep!';
+
+      activeReceiptPlainText = buildPlainReceiptText({
+        title: 'STRUK PEMBAYARAN RESMI',
+        queueNumber: trx.queueNumber,
+        refId: trx.id,
+        time: formatDateTime(trx.createdAt),
+        staffLabel: 'Kasir',
+        staffValue: trx.cashierName,
+        customer: `${trx.customerName} (${trx.orderType})`,
+        items: trx.items,
+        subtotal: trx.subtotal,
+        discount: trx.discount || 0,
+        tax: trx.tax,
+        total: trx.grandTotal,
+        isPaid: true,
+        method: trx.paymentMethod,
+        paid: trx.paid,
+        change: trx.change
+      });
+
+      document.getElementById('receiptModal').classList.remove('hidden');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.add('hidden');
+    }
+
+    function buildPlainReceiptText(data) {
+      const lines = [
+        '================================',
+        '     ARINNA CAFE & RESTO',
+        'Jl. DR. Cipto No.99, Kolor, Sumenep',
+        '================================',
+        data.title,
+        `NO. ANTRIAN : ${data.queueNumber}`,
+        `No. Ref     : ${data.refId}`,
+        `Waktu       : ${data.time}`,
+        `${data.staffLabel.padEnd(11, ' ')} : ${data.staffValue}`,
+        `Pelanggan   : ${data.customer}`,
+        '--------------------------------'
+      ];
+      data.items.forEach(i => {
+        lines.push(`${i.name}${i.note ? ` [${i.note}]` : ''}`);
+        lines.push(`  ${i.qty} x ${formatRupiah(i.price)} = ${formatRupiah(i.qty * i.price)}`);
+      });
+      lines.push('--------------------------------');
+      lines.push(`Subtotal    : ${formatRupiah(data.subtotal)}`);
+      if (data.discount > 0) {
+        lines.push(`Diskon      : -${formatRupiah(data.discount)}`);
+      }
+      if (data.tax > 0) {
+        lines.push(`Pajak Resto : ${formatRupiah(data.tax)}`);
+      }
+      lines.push(`TOTAL       : ${formatRupiah(data.total)}`);
+      if (data.isPaid) {
+        lines.push(`Bayar (${data.method}) : ${formatRupiah(data.paid)}`);
+        lines.push(`Kembalian   : ${formatRupiah(data.change)}`);
+      }
+      lines.push('================================');
+      lines.push('Terima kasih atas kunjungan Anda!');
+      return lines.join('\n');
+    }
+
+    function copyReceiptTextToClipboard() {
+      if (!activeReceiptPlainText) return;
+      const textarea = document.createElement('textarea');
+      textarea.value = activeReceiptPlainText;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Teks struk berhasil disalin! Siap ditempel ke WhatsApp.', 'success');
+      } catch (err) {
+        showToast('Gagal menyalin teks struk.', 'error');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // --- LIVE CLOCK & MULTI-TAB STORAGE SYNC ---
+    function startLiveClock() {
+      const update = () => {
+        const el = document.getElementById('liveClockText');
+        if (el) {
+          el.textContent = new Date().toLocaleString('id-ID', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+        }
+      };
+      update();
+      setInterval(update, 1000);
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (!event.key) return;
+      menuCatalog = loadMenuCatalog();
+      updateQueueDisplays();
+      if (!currentSession) return;
+
+      if (currentSession.role === 'customer') {
+        renderCustomerMenu();
+        renderCustomerTickets();
+      } else {
+        renderPosMenu();
+        renderStaffOnlineOrders();
+        renderManageMenu();
+        renderReportsAndHistory();
+      }
+    });
+
+    // --- BOOTSTRAP APP ---
+    window.addEventListener('DOMContentLoaded', () => {
+      menuCatalog = loadMenuCatalog();
+      startLiveClock();
+      updateQueueDisplays();
+
+      try {
+        const savedSession = JSON.parse(safeStorageGet(KEYS.SESSION));
+        if (savedSession && savedSession.role) {
+          currentSession = savedSession;
+        }
+      } catch (e) {}
+
+      renderWorkspaceForSession();
+    });
+  </script>
+</body>
+</html>
